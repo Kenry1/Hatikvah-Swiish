@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -229,7 +228,7 @@ const Vehicles = () => {
                 <CardDescription>Details about your assigned vehicle</CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setTransferDialogOpen(true)}>
+                <Button variant="outline" onClick={() => setIsTransferDialogOpen(true)}>
                   Transfer Ownership
                 </Button>
                 <Button variant="destructive" onClick={() => setIsUnassignDialogOpen(true)}>

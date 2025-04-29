@@ -10,9 +10,10 @@ import {
   FormProvider,
   useFormContext,
   UseFormReturn,
+  FieldArrayWithId,
+  FieldArray,
   useFieldArray,
   UseFieldArrayReturn,
-  ArrayPath,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -169,21 +170,46 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
-// Fixed FormFieldArray function to properly work with field arrays
-// Using ArrayPath instead of FieldPath for proper typing
+// Fix for the UseFieldArrayReturn type issue
+type FormFieldArrayContextValue<
+  TFieldValues extends FieldValues = FieldValues,
+  TFieldArrayName extends string = string,
+  TKeyName extends string = "id"
+> = {
+  name: TFieldArrayName
+  keyName: TKeyName
+}
+
+const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
+  {} as FormFieldArrayContextValue
+)
+
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
-  TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
-  TKeyName extends string = "id",
->(props: {
-  name: TFieldArrayName;
-  control: UseFormReturn<TFieldValues>["control"];
-  render: (fields: UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>) => React.ReactNode;
+  TFieldArrayName extends string = string,
+  TKeyName extends string = "id"
+>({
+  name,
+  keyName = "id" as TKeyName,
+  children,
+}: {
+  name: TFieldArrayName
+  keyName?: TKeyName
+  children: (props: UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>) => React.ReactNode
 }) => {
-  const { control, name, render } = props
-  const fieldArray = useFieldArray({ control, name })
-  
-  return <>{render(fieldArray)}</>
+  const methods = useFormContext<TFieldValues>()
+  // Cast to any to avoid TypeScript issues
+  const fieldArrayMethods = useFieldArray<TFieldValues, TFieldArrayName, TKeyName>({
+    control: methods.control,
+    name,
+    keyName,
+  }) as UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>
+
+  return (
+    <FormFieldArrayContext.Provider value={{ name, keyName }}>
+      {children(fieldArrayMethods)}
+    </FormFieldArrayContext.Provider>
+  )
 }
 
 export {

@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, UserRole } from "../types";
 
 interface AuthContextType {
@@ -35,7 +35,11 @@ const mockUsers = {
   }
 };
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -81,7 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser = {
         id: `user-${Date.now()}`,
         email,
-        role
+        role,
+        name: email.split('@')[0]
       };
       setUser(newUser);
       localStorage.setItem('swiishUser', JSON.stringify(newUser));
@@ -97,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // In a real app, this would make a Supabase call
     localStorage.removeItem('swiishUser');
     setUser(null);
+    return Promise.resolve();
   };
 
   const demoLogin = async (role: UserRole) => {
@@ -114,8 +120,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const value = {
+    user,
+    isLoading,
+    signIn,
+    signUp,
+    signOut,
+    demoLogin
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut, demoLogin }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
