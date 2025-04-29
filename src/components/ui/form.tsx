@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
@@ -171,7 +170,7 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
-// Fix for the UseFieldArrayReturn type issue
+// Fix for the UseFieldArrayReturn type issue - modifying the type constraint for TKeyName
 type FormFieldArrayContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
@@ -188,7 +187,8 @@ const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
-  TKeyName extends string = "id"
+  // Here's the fix: constrain TKeyName to be a subtype of "id" by using "id" as the default
+  TKeyName extends "id" = "id"
 >({
   name,
   keyName = "id" as TKeyName,
