@@ -28,6 +28,16 @@ import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
 import { default as LogisticsVehicles } from "./pages/logistics/Vehicles";
 import LogisticsFuelRequests from "./pages/logistics/FuelRequests";
 
+// New Role Pages (imports for placeholder dashboards - will create these next)
+import HRDashboard from "./pages/hr/HRDashboard";
+import IMDashboard from "./pages/implementation_manager/IMDashboard";
+import PMDashboard from "./pages/project_manager/PMDashboard";
+import PlanningDashboard from "./pages/planning/PlanningDashboard";
+import ITDashboard from "./pages/it/ITDashboard";
+import FinanceDashboard from "./pages/finance/FinanceDashboard";
+import ManagementDashboard from "./pages/management/ManagementDashboard";
+import EHSDashboard from "./pages/ehs/EHSDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -126,6 +136,86 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['logistics']}>
                   <LogisticsFuelRequests />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* HR Routes */}
+            <Route 
+              path="/hr" 
+              element={
+                <ProtectedRoute allowedRoles={['hr']}>
+                  <HRDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Implementation Manager Routes */}
+            <Route 
+              path="/implementation-manager" 
+              element={
+                <ProtectedRoute allowedRoles={['implementation_manager']}>
+                  <IMDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Project Manager Routes */}
+            <Route 
+              path="/project-manager" 
+              element={
+                <ProtectedRoute allowedRoles={['project_manager']}>
+                  <PMDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Planning Routes */}
+            <Route 
+              path="/planning" 
+              element={
+                <ProtectedRoute allowedRoles={['planning']}>
+                  <PlanningDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* IT Routes */}
+            <Route 
+              path="/it" 
+              element={
+                <ProtectedRoute allowedRoles={['it']}>
+                  <ITDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Finance Routes */}
+            <Route 
+              path="/finance" 
+              element={
+                <ProtectedRoute allowedRoles={['finance']}>
+                  <FinanceDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Management Routes */}
+            <Route 
+              path="/management" 
+              element={
+                <ProtectedRoute allowedRoles={['management']}>
+                  <ManagementDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* EHS Routes */}
+            <Route 
+              path="/ehs" 
+              element={
+                <ProtectedRoute allowedRoles={['ehs']}>
+                  <EHSDashboard />
                 </ProtectedRoute>
               } 
             />

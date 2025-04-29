@@ -14,12 +14,43 @@ const Home = () => {
     }
 
     // Redirect based on user role
-    if (user.role === 'technician') {
-      navigate('/technician');
-    } else if (user.role === 'warehouse') {
-      navigate('/warehouse');
-    } else if (user.role === 'logistics') {
-      navigate('/logistics');
+    switch (user.role) {
+      case 'technician':
+        navigate('/technician');
+        break;
+      case 'warehouse':
+        navigate('/warehouse');
+        break;
+      case 'logistics':
+        navigate('/logistics');
+        break;
+      case 'hr':
+        navigate('/hr');
+        break;
+      case 'implementation_manager':
+        navigate('/implementation-manager');
+        break;
+      case 'project_manager':
+        navigate('/project-manager');
+        break;
+      case 'planning':
+        navigate('/planning');
+        break;
+      case 'it':
+        navigate('/it');
+        break;
+      case 'finance':
+        navigate('/finance');
+        break;
+      case 'management':
+        navigate('/management');
+        break;
+      case 'ehs':
+        navigate('/ehs');
+        break;
+      default:
+        navigate('/login');
+        break;
     }
   }, [user, navigate]);
 

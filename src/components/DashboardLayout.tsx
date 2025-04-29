@@ -4,8 +4,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight } from 'lucide-react';
+import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UserRole } from '@/types';
 
 interface SidebarLinkProps {
   to: string;
@@ -55,31 +56,87 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
     }
   };
 
+  // Get base path for the current role
+  const getBasePath = (): string => {
+    if (!user) return '/';
+    
+    switch (user.role) {
+      case 'technician': return '/technician';
+      case 'warehouse': return '/warehouse';
+      case 'logistics': return '/logistics';
+      case 'hr': return '/hr';
+      case 'implementation_manager': return '/implementation-manager';
+      case 'project_manager': return '/project-manager';
+      case 'planning': return '/planning';
+      case 'it': return '/it';
+      case 'finance': return '/finance';
+      case 'management': return '/management';
+      case 'ehs': return '/ehs';
+      default: return '/';
+    }
+  };
+
   // Define links based on user role
   const getNavLinks = () => {
-    if (user?.role === 'technician') {
-      return [
-        { to: "/technician", icon: <User />, label: "Dashboard" },
-        { to: "/technician/fuel-requests", icon: <Fuel />, label: "Fuel Requests" },
-        { to: "/technician/vehicles", icon: <Car />, label: "Vehicles" },
-        { to: "/technician/material-requests", icon: <Package />, label: "Materials" }
-      ];
-    }
-    if (user?.role === 'warehouse') {
-      return [
-        { to: "/warehouse", icon: <User />, label: "Dashboard" },
-        { to: "/warehouse/material-requests", icon: <Package />, label: "Material Requests" },
-        { to: "/warehouse/inventory", icon: <Package />, label: "Inventory" }
-      ];
-    }
-    if (user?.role === 'logistics') {
-      return [
-        { to: "/logistics", icon: <User />, label: "Dashboard" },
-        { to: "/logistics/vehicles", icon: <Car />, label: "Vehicles" },
-        { to: "/logistics/fuel-requests", icon: <Fuel />, label: "Fuel Requests" }
-      ];
-    }
-    return [];
+    if (!user) return [];
+    
+    const basePath = getBasePath();
+    
+    // Common links that appear in all dashboards
+    const commonLinks = [
+      { to: basePath, icon: <LayoutDashboard />, label: "Dashboard" }
+    ];
+    
+    // Role-specific links
+    const roleLinks = {
+      technician: [
+        { to: `${basePath}/fuel-requests`, icon: <Fuel />, label: "Fuel Requests" },
+        { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
+        { to: `${basePath}/material-requests`, icon: <Package />, label: "Materials" }
+      ],
+      warehouse: [
+        { to: `${basePath}/material-requests`, icon: <Package />, label: "Material Requests" },
+        { to: `${basePath}/inventory`, icon: <Package />, label: "Inventory" }
+      ],
+      logistics: [
+        { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
+        { to: `${basePath}/fuel-requests`, icon: <Fuel />, label: "Fuel Requests" }
+      ],
+      hr: [
+        { to: `${basePath}`, icon: <Users />, label: "Employees" },
+        { to: `${basePath}`, icon: <FileText />, label: "Documents" }
+      ],
+      implementation_manager: [
+        { to: `${basePath}`, icon: <Briefcase />, label: "Projects" },
+        { to: `${basePath}`, icon: <Calendar />, label: "Schedule" }
+      ],
+      project_manager: [
+        { to: `${basePath}`, icon: <Briefcase />, label: "Projects" },
+        { to: `${basePath}`, icon: <Calendar />, label: "Timeline" }
+      ],
+      planning: [
+        { to: `${basePath}`, icon: <Car />, label: "Vehicles" },
+        { to: `${basePath}`, icon: <Calendar />, label: "Schedules" }
+      ],
+      it: [
+        { to: `${basePath}`, icon: <Database />, label: "Systems" },
+        { to: `${basePath}`, icon: <Settings />, label: "Configuration" }
+      ],
+      finance: [
+        { to: `${basePath}`, icon: <FileText />, label: "Reports" },
+        { to: `${basePath}`, icon: <FolderOpen />, label: "Budgets" }
+      ],
+      management: [
+        { to: `${basePath}`, icon: <Users />, label: "Departments" },
+        { to: `${basePath}`, icon: <FileText />, label: "Reports" }
+      ],
+      ehs: [
+        { to: `${basePath}`, icon: <Shield />, label: "Safety" },
+        { to: `${basePath}`, icon: <FileText />, label: "Compliance" }
+      ]
+    };
+
+    return [...commonLinks, ...(roleLinks[user.role] || [])];
   };
 
   const navLinks = getNavLinks();

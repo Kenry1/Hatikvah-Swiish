@@ -14,6 +14,7 @@ import {
   FieldArray,
   useFieldArray,
   UseFieldArrayReturn,
+  ArrayPath,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -173,7 +174,7 @@ FormMessage.displayName = "FormMessage"
 // Fix for the UseFieldArrayReturn type issue
 type FormFieldArrayContextValue<
   TFieldValues extends FieldValues = FieldValues,
-  TFieldArrayName extends string = string,
+  TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
   TKeyName extends string = "id"
 > = {
   name: TFieldArrayName
@@ -186,7 +187,7 @@ const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
 
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
-  TFieldArrayName extends string = string,
+  TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
   TKeyName extends string = "id"
 >({
   name,
@@ -198,12 +199,11 @@ const FormFieldArray = <
   children: (props: UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>) => React.ReactNode
 }) => {
   const methods = useFormContext<TFieldValues>()
-  // Cast to any to avoid TypeScript issues
   const fieldArrayMethods = useFieldArray<TFieldValues, TFieldArrayName, TKeyName>({
     control: methods.control,
     name,
     keyName,
-  }) as UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>
+  })
 
   return (
     <FormFieldArrayContext.Provider value={{ name, keyName }}>

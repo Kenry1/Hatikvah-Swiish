@@ -32,6 +32,54 @@ const mockUsers = {
     email: "logistics@swiish.com",
     role: "logistics" as UserRole,
     name: "Jordan Logistics"
+  },
+  hr: {
+    id: "hr-123",
+    email: "hr@swiish.com",
+    role: "hr" as UserRole,
+    name: "Taylor HR"
+  },
+  implementation_manager: {
+    id: "im-123",
+    email: "im@swiish.com",
+    role: "implementation_manager" as UserRole,
+    name: "Morgan Implementation"
+  },
+  project_manager: {
+    id: "pm-123",
+    email: "pm@swiish.com",
+    role: "project_manager" as UserRole,
+    name: "Casey Project"
+  },
+  planning: {
+    id: "planning-123",
+    email: "planning@swiish.com",
+    role: "planning" as UserRole,
+    name: "Riley Planning"
+  },
+  it: {
+    id: "it-123",
+    email: "it@swiish.com",
+    role: "it" as UserRole,
+    name: "Quinn IT"
+  },
+  finance: {
+    id: "finance-123",
+    email: "finance@swiish.com",
+    role: "finance" as UserRole,
+    name: "Jamie Finance"
+  },
+  management: {
+    id: "management-123",
+    email: "management@swiish.com",
+    role: "management" as UserRole,
+    name: "Pat Management"
+  },
+  ehs: {
+    id: "ehs-123",
+    email: "ehs@swiish.com",
+    role: "ehs" as UserRole,
+    name: "Drew EHS"
   }
 };
 
@@ -66,6 +114,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (email === 'logistics@swiish.com') {
         setUser(mockUsers.logistics);
         localStorage.setItem('swiishUser', JSON.stringify(mockUsers.logistics));
+      } else if (email === 'hr@swiish.com') {
+        setUser(mockUsers.hr);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.hr));
+      } else if (email === 'im@swiish.com') {
+        setUser(mockUsers.implementation_manager);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.implementation_manager));
+      } else if (email === 'pm@swiish.com') {
+        setUser(mockUsers.project_manager);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.project_manager));
+      } else if (email === 'planning@swiish.com') {
+        setUser(mockUsers.planning);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.planning));
+      } else if (email === 'it@swiish.com') {
+        setUser(mockUsers.it);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.it));
+      } else if (email === 'finance@swiish.com') {
+        setUser(mockUsers.finance);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.finance));
+      } else if (email === 'management@swiish.com') {
+        setUser(mockUsers.management);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.management));
+      } else if (email === 'ehs@swiish.com') {
+        setUser(mockUsers.ehs);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.ehs));
       } else {
         throw new Error("Invalid credentials");
       }

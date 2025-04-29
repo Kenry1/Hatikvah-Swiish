@@ -1,5 +1,16 @@
 
-export type UserRole = 'technician' | 'warehouse' | 'logistics';
+export type UserRole = 
+  | 'technician' 
+  | 'warehouse' 
+  | 'logistics' 
+  | 'hr' 
+  | 'implementation_manager' 
+  | 'project_manager' 
+  | 'planning' 
+  | 'it' 
+  | 'finance' 
+  | 'management' 
+  | 'ehs';
 
 export interface User {
   id: string;
