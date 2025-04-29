@@ -100,14 +100,22 @@ const TechnicianDashboard = () => {
             <CardContent className="grid gap-2">
               <Button 
                 className="justify-start"
-                onClick={() => navigate('/technician/fuel-requests/new')}
+                onClick={() => {
+                  navigate('/technician/fuel-requests');
+                  // In a real app, we would trigger the new fuel request modal directly
+                  // For now, we'll navigate to the page where the user can click the New Fuel Request button
+                }}
               >
                 <Fuel className="mr-2 h-4 w-4" />
                 New Fuel Request
               </Button>
               <Button 
                 className="justify-start"
-                onClick={() => navigate('/technician/material-requests/new')}
+                onClick={() => {
+                  navigate('/technician/material-requests');
+                  // In a real app, we would trigger the new material request modal directly
+                  // For now, we'll navigate to the page where the user can click the New Material Request button
+                }}
               >
                 <Package className="mr-2 h-4 w-4" />
                 New Material Request
