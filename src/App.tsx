@@ -25,7 +25,7 @@ import Inventory from "./pages/warehouse/Inventory";
 
 // Logistics Pages
 import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
-import Vehicles as LogisticsVehicles from "./pages/logistics/Vehicles";
+import { default as LogisticsVehicles } from "./pages/logistics/Vehicles";
 import LogisticsFuelRequests from "./pages/logistics/FuelRequests";
 
 const queryClient = new QueryClient();
