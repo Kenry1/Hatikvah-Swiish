@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Package, Plus, Check, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormFieldArray } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { MaterialRequest, MaterialRequestItem, Material } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -77,7 +77,11 @@ const MaterialRequests = () => {
     }
   });
 
-  const { fields, append, remove } = form.control._fields.items || { fields: [] };
+  // Use useFieldArray hook properly
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items"
+  });
 
   const onSubmit = (data: MaterialFormData) => {
     // Filter out any empty item selections
@@ -283,7 +287,7 @@ const MaterialRequests = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-4">
-                {Array.isArray(form.control._fields.items?.fields) && form.control._fields.items.fields.map((field, index) => (
+                {fields.map((field, index) => (
                   <div key={field.id} className="space-y-2">
                     <div className="flex items-end gap-3">
                       <div className="flex-1">

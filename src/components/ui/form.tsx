@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
@@ -8,6 +9,9 @@ import {
   FieldValues,
   FormProvider,
   useFormContext,
+  UseFormReturn,
+  useFieldArray,
+  UseFieldArrayReturn,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -164,6 +168,22 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
+// Added FormFieldArray function to properly work with field arrays
+const FormFieldArray = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TKeyName extends string = "id",
+>(props: {
+  name: TName;
+  control: UseFormReturn<TFieldValues>["control"];
+  render: (fields: UseFieldArrayReturn<TFieldValues, TName, TKeyName>) => React.ReactNode;
+}) => {
+  const { control, name, render } = props
+  const fieldArray = useFieldArray({ control, name })
+  
+  return <>{render(fieldArray)}</>
+}
+
 export {
   useFormField,
   Form,
@@ -173,4 +193,5 @@ export {
   FormDescription,
   FormMessage,
   FormField,
+  FormFieldArray,
 }
