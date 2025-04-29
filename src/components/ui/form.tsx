@@ -12,6 +12,7 @@ import {
   UseFormReturn,
   useFieldArray,
   UseFieldArrayReturn,
+  ArrayPath,
 } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
@@ -168,15 +169,16 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
-// Added FormFieldArray function to properly work with field arrays
+// Fixed FormFieldArray function to properly work with field arrays
+// Using ArrayPath instead of FieldPath for proper typing
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
   TKeyName extends string = "id",
 >(props: {
-  name: TName;
+  name: TFieldArrayName;
   control: UseFormReturn<TFieldValues>["control"];
-  render: (fields: UseFieldArrayReturn<TFieldValues, TName, TKeyName>) => React.ReactNode;
+  render: (fields: UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>) => React.ReactNode;
 }) => {
   const { control, name, render } = props
   const fieldArray = useFieldArray({ control, name })

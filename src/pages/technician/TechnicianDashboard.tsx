@@ -48,14 +48,14 @@ const TechnicianDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Assigned Vehicles
+                Assigned Vehicle
               </CardTitle>
               <Car className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
+              <div className="text-2xl font-bold">Toyota Hilux</div>
               <p className="text-xs text-muted-foreground">
-                Ford Ranger, Toyota Hilux
+                Registration: KBZ 123A
               </p>
               <Button 
                 variant="outline" 
@@ -63,7 +63,7 @@ const TechnicianDashboard = () => {
                 className="mt-4 w-full"
                 onClick={() => navigate('/technician/vehicles')}
               >
-                Manage Vehicles
+                Manage Vehicle
               </Button>
             </CardContent>
           </Card>
@@ -100,25 +100,24 @@ const TechnicianDashboard = () => {
             <CardContent className="grid gap-2">
               <Button 
                 className="justify-start"
-                onClick={() => {
-                  navigate('/technician/fuel-requests');
-                  // In a real app, we would trigger the new fuel request modal directly
-                  // For now, we'll navigate to the page where the user can click the New Fuel Request button
-                }}
+                onClick={() => navigate('/technician/fuel-requests')}
               >
                 <Fuel className="mr-2 h-4 w-4" />
                 New Fuel Request
               </Button>
               <Button 
                 className="justify-start"
-                onClick={() => {
-                  navigate('/technician/material-requests');
-                  // In a real app, we would trigger the new material request modal directly
-                  // For now, we'll navigate to the page where the user can click the New Material Request button
-                }}
+                onClick={() => navigate('/technician/material-requests')}
               >
                 <Package className="mr-2 h-4 w-4" />
                 New Material Request
+              </Button>
+              <Button 
+                className="justify-start"
+                onClick={() => navigate('/technician/vehicles')}
+              >
+                <Car className="mr-2 h-4 w-4" />
+                Manage Vehicle
               </Button>
             </CardContent>
           </Card>

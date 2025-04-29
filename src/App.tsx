@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import TechnicianDashboard from "./pages/technician/TechnicianDashboard";
 import FuelRequests from "./pages/technician/FuelRequests";
 import MaterialRequests from "./pages/technician/MaterialRequests";
+import Vehicles from "./pages/technician/Vehicles";
 
 // Warehouse Pages
 import WarehouseDashboard from "./pages/warehouse/WarehouseDashboard";
@@ -24,7 +25,7 @@ import Inventory from "./pages/warehouse/Inventory";
 
 // Logistics Pages
 import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
-import Vehicles from "./pages/logistics/Vehicles";
+import Vehicles as LogisticsVehicles from "./pages/logistics/Vehicles";
 import LogisticsFuelRequests from "./pages/logistics/FuelRequests";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/technician/vehicles" 
+              element={
+                <ProtectedRoute allowedRoles={['technician']}>
+                  <Vehicles />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Warehouse Routes */}
             <Route 
@@ -108,7 +117,7 @@ const App = () => (
               path="/logistics/vehicles" 
               element={
                 <ProtectedRoute allowedRoles={['logistics']}>
-                  <Vehicles />
+                  <LogisticsVehicles />
                 </ProtectedRoute>
               } 
             />

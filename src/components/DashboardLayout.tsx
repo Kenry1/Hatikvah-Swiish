@@ -61,6 +61,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       return [
         { to: "/technician", icon: <User />, label: "Dashboard" },
         { to: "/technician/fuel-requests", icon: <Fuel />, label: "Fuel Requests" },
+        { to: "/technician/vehicles", icon: <Car />, label: "Vehicles" },
         { to: "/technician/material-requests", icon: <Package />, label: "Materials" }
       ];
     }
