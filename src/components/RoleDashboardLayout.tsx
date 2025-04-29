@@ -5,15 +5,19 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
 
+interface FeatureItem {
+  title: string;
+  description: string;
+  icon?: ReactNode;
+  color?: string;
+}
+
 interface RoleDashboardLayoutProps {
   children?: ReactNode;
   pageTitle: string;
   roleLabel: string;
   dashboardDescription: string;
-  newFeatures?: {
-    title: string;
-    description: string;
-  }[];
+  newFeatures?: FeatureItem[];
 }
 
 const RoleDashboardLayout = ({ 
@@ -29,27 +33,18 @@ const RoleDashboardLayout = ({
     <DashboardLayout>
       <div className="flex flex-col space-y-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{pageTitle}</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.name}! 
+          <h1 className="text-3xl font-bold tracking-tight text-primary">{pageTitle}</h1>
+          <p className="mt-2 text-muted-foreground">
+            Welcome back, <span className="font-medium">{user?.name}</span>! {dashboardDescription}
           </p>
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>{roleLabel} Dashboard</CardTitle>
-              <CardDescription>{dashboardDescription}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Access your {roleLabel.toLowerCase()} tools and resources from this dashboard.</p>
-            </CardContent>
-          </Card>
-          
           {newFeatures.map((feature, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle>{feature.title}</CardTitle>
+            <Card key={index} className={`overflow-hidden transition-all hover:shadow-md ${feature.color || ''}`}>
+              <CardHeader className="pb-2">
+                {feature.icon && <div className="mb-2">{feature.icon}</div>}
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p>{feature.description}</p>
