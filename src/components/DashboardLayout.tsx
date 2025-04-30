@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen } from 'lucide-react';
+import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 
@@ -111,8 +111,9 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
         { to: `${basePath}`, icon: <Calendar />, label: "Schedule" }
       ],
       project_manager: [
-        { to: `${basePath}`, icon: <Briefcase />, label: "Projects" },
-        { to: `${basePath}`, icon: <Calendar />, label: "Timeline" }
+        { to: `${basePath}/overview`, icon: <ChartGantt />, label: "Project Overview" },
+        { to: `${basePath}/approvals`, icon: <FileText />, label: "Request Approvals" },
+        { to: `${basePath}/tasks`, icon: <ListChecks />, label: "Task Assignments" }
       ],
       planning: [
         { to: `${basePath}`, icon: <Car />, label: "Vehicles" },

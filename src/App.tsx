@@ -28,10 +28,13 @@ import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
 import { default as LogisticsVehicles } from "./pages/logistics/Vehicles";
 import LogisticsFuelRequests from "./pages/logistics/FuelRequests";
 
-// New Role Pages (imports for placeholder dashboards - will create these next)
+// New Role Pages
 import HRDashboard from "./pages/hr/HRDashboard";
 import IMDashboard from "./pages/implementation_manager/IMDashboard";
 import PMDashboard from "./pages/project_manager/PMDashboard";
+import ProjectOverview from "./pages/project_manager/ProjectOverview";
+import RequestApprovals from "./pages/project_manager/RequestApprovals";
+import TaskAssignments from "./pages/project_manager/TaskAssignments";
 import PlanningDashboard from "./pages/planning/PlanningDashboard";
 import ITDashboard from "./pages/it/ITDashboard";
 import FinanceDashboard from "./pages/finance/FinanceDashboard";
@@ -166,6 +169,30 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['project_manager']}>
                   <PMDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/project-manager/overview" 
+              element={
+                <ProtectedRoute allowedRoles={['project_manager']}>
+                  <ProjectOverview />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/project-manager/approvals" 
+              element={
+                <ProtectedRoute allowedRoles={['project_manager']}>
+                  <RequestApprovals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/project-manager/tasks" 
+              element={
+                <ProtectedRoute allowedRoles={['project_manager']}>
+                  <TaskAssignments />
                 </ProtectedRoute>
               } 
             />
