@@ -97,7 +97,8 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       ],
       warehouse: [
         { to: `${basePath}/material-requests`, icon: <Package />, label: "Material Requests" },
-        { to: `${basePath}/inventory`, icon: <Package />, label: "Inventory" }
+        { to: `${basePath}/inventory`, icon: <Package />, label: "Inventory" },
+        { to: `${basePath}/ehs-issuance`, icon: <Shield />, label: "EHS Issuance" } // New EHS link for Warehouse
       ],
       logistics: [
         { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
@@ -110,11 +111,13 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       ],
       implementation_manager: [
         { to: `${basePath}`, icon: <Briefcase />, label: "Projects" },
+        { to: `${basePath}/ehs-requests`, icon: <Shield />, label: "EHS Requests" }, // New EHS link for Implementation Manager
         { to: `${basePath}`, icon: <Calendar />, label: "Schedule" }
       ],
       project_manager: [
         { to: `${basePath}/overview`, icon: <ChartGantt />, label: "Project Overview" },
         { to: `${basePath}/approvals`, icon: <FileText />, label: "Request Approvals" },
+        { to: `${basePath}/ehs-approvals`, icon: <Shield />, label: "EHS Approvals" }, // New EHS link for Project Manager
         { to: `${basePath}/tasks`, icon: <ListChecks />, label: "Task Assignments" }
       ],
       planning: [
@@ -134,8 +137,8 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
         { to: `${basePath}`, icon: <FileText />, label: "Reports" }
       ],
       ehs: [
-        { to: `${basePath}`, icon: <Shield />, label: "Safety" },
-        { to: `${basePath}`, icon: <FileText />, label: "Compliance" }
+        { to: `${basePath}`, icon: <Shield />, label: "Dashboard" },
+        { to: `${basePath}/overview`, icon: <FileText />, label: "Safety Requests" } // New link to EHS overview page
       ]
     };
 
