@@ -530,7 +530,7 @@ const SafetyEquipment = () => {
                             )}
                           />
                           
-                          {field.value && (
+                          {form.getValues("employeeName") && (
                             <>
                               <div className="flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">Equipment for this employee</p>
@@ -544,8 +544,8 @@ const SafetyEquipment = () => {
                                 </Button>
                               </div>
                               
-                              {teamLeadEmployeeEquipment.fields.map((field, index) => (
-                                <div key={field.id} className="flex items-end gap-3 border-b pb-3">
+                              {teamLeadEmployeeEquipment.fields.map((equipField, index) => (
+                                <div key={equipField.id} className="flex items-end gap-3 border-b pb-3">
                                   <div className="flex-grow">
                                     <FormField
                                       control={form.control}
