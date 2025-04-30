@@ -4,12 +4,16 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Car, Fuel, AlertCircle, CheckCircle } from 'lucide-react';
+import { Car, Fuel, AlertCircle, CheckCircle, PieChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { VehiclesOverview } from '@/components/logistics/VehiclesOverview';
+import { FuelRequestsOverview } from '@/components/logistics/FuelRequestsOverview';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const LogisticsDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   return (
     <DashboardLayout>
@@ -22,7 +26,10 @@ const LogisticsDashboard = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
+          <Card 
+            className="cursor-pointer hover:border-primary transition-colors"
+            onClick={() => navigate('/logistics/vehicles')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Vehicles
@@ -37,7 +44,10 @@ const LogisticsDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card 
+            className="cursor-pointer hover:border-primary transition-colors"
+            onClick={() => navigate('/logistics/fuel-requests')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Pending Fuel Requests
@@ -90,76 +100,22 @@ const LogisticsDashboard = () => {
               <CardDescription>Latest assignments and status updates</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Car className="h-5 w-5 text-blue-700" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Toyota Hilux (KBC 123D)</p>
-                      <p className="text-xs text-muted-foreground">Assigned to Alex Technician • 2 hours ago</p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/logistics/vehicles')}
-                  >
-                    View
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-9 w-9 rounded-full bg-amber-100 flex items-center justify-center">
-                      <Fuel className="h-5 w-5 text-amber-700" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Fuel Request Approved</p>
-                      <p className="text-xs text-muted-foreground">For Ford Ranger (KDD 456P) • 5 hours ago</p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/logistics/fuel-requests')}
-                  >
-                    Details
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-9 w-9 rounded-full bg-red-100 flex items-center justify-center">
-                      <AlertCircle className="h-5 w-5 text-red-700" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Maintenance Alert</p>
-                      <p className="text-xs text-muted-foreground">Isuzu D-Max (KCA 789Q) • Yesterday</p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/logistics/vehicles')}
-                  >
-                    Schedule
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-center">
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/logistics/vehicles')}
-                >
-                  View All Vehicles
-                </Button>
-              </div>
+              <VehiclesOverview />
             </CardContent>
           </Card>
           
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Recent Fuel Requests</CardTitle>
+              <CardDescription>Latest fuel requests from employees</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FuelRequestsOverview />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
@@ -185,6 +141,13 @@ const LogisticsDashboard = () => {
               >
                 <Fuel className="mr-2 h-4 w-4" />
                 Manage Fuel Requests
+              </Button>
+              <Button 
+                className="w-full justify-start"
+                onClick={() => navigate('/logistics/reports')}
+              >
+                <PieChart className="mr-2 h-4 w-4" />
+                View Fleet Reports
               </Button>
             </CardContent>
           </Card>

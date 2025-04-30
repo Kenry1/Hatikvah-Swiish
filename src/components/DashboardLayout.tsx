@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
+import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarLinkProps {
   to: string;
@@ -100,7 +101,8 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       ],
       logistics: [
         { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
-        { to: `${basePath}/fuel-requests`, icon: <Fuel />, label: "Fuel Requests" }
+        { to: `${basePath}/fuel-requests`, icon: <Fuel />, label: "Fuel Requests" },
+        { to: `${basePath}/manage-account`, icon: <User />, label: "Manage Account" }
       ],
       hr: [
         { to: `${basePath}`, icon: <Users />, label: "Employees" },
@@ -183,17 +185,22 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
         </nav>
         
         <div className="p-4 border-t border-sidebar-border mt-auto">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full flex items-center justify-start gap-3 text-sidebar-foreground hover:text-destructive",
-              isCollapsed && "justify-center px-2"
-            )}
-            onClick={handleSignOut}
-          >
-            <LogOut size={20} />
-            {!isCollapsed && <span>Logout</span>}
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              className="text-sidebar-foreground hover:text-destructive"
+              size="icon"
+              onClick={handleSignOut}
+            >
+              <LogOut size={20} />
+            </Button>
+          </div>
+          {!isCollapsed && (
+            <div className="text-xs text-sidebar-foreground/70 text-center">
+              Swiish Fleet Management v1.0
+            </div>
+          )}
         </div>
       </div>
 
