@@ -93,16 +93,14 @@ const Vehicles = () => {
                     Status {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer"
+                    className="cursor-pointer text-right"
                     onClick={() => handleSort('mileage')}
-                    className="text-right"
                   >
                     Mileage {sortColumn === 'mileage' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer"
+                    className="cursor-pointer text-right"
                     onClick={() => handleSort('expenses')}
-                    className="text-right"
                   >
                     Total Expenses {sortColumn === 'expenses' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
