@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ListChecks, Edit, Filter, UserPlus, ProgressBar } from "lucide-react";
+import { Calendar as CalendarIcon, ListChecks, Edit, Filter, UserPlus, BarChart, CheckCircle } from "lucide-react";
 import DashboardLayout from '@/components/DashboardLayout';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -450,7 +449,7 @@ const TaskAssignments = () => {
                 <h3 className="font-semibold mb-2">Progress Tracking</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <ProgressBar className="h-4 w-4 text-blue-500" />
+                    <BarChart className="h-4 w-4 text-blue-500" />
                     <span className="text-muted-foreground">Task Progress:</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -475,7 +474,7 @@ const TaskAssignments = () => {
                     onClick={handleCompleteTask}
                     disabled={selectedTask.status === 'Completed'}
                   >
-                    <Check className="h-4 w-4 mr-1" />
+                    <CheckCircle className="h-4 w-4 mr-1" />
                     Mark Complete
                   </Button>
                   <Button onClick={handleEditTask}>
