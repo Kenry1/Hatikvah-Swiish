@@ -170,7 +170,7 @@ const FormMessage = React.forwardRef<
 })
 FormMessage.displayName = "FormMessage"
 
-// Fix for the UseFieldArrayReturn type issue - modifying the type constraint for TKeyName
+// Fix for the UseFieldArrayReturn type issue - correcting the type constraint
 type FormFieldArrayContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
@@ -187,8 +187,8 @@ const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
-  // Here's the fix: constrain TKeyName to be a subtype of "id" by using "id" as the default
-  TKeyName extends "id" = "id"
+  // Removing the incorrect constraint, allowing TKeyName to be any string
+  TKeyName extends string = "id"
 >({
   name,
   keyName = "id" as TKeyName,
