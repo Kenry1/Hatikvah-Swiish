@@ -18,6 +18,7 @@ import TechnicianDashboard from "./pages/technician/TechnicianDashboard";
 import FuelRequests from "./pages/technician/FuelRequests";
 import MaterialRequests from "./pages/technician/MaterialRequests";
 import Vehicles from "./pages/technician/Vehicles";
+import SafetyEquipment from "./pages/technician/SafetyEquipment";
 
 // Warehouse Pages
 import WarehouseDashboard from "./pages/warehouse/WarehouseDashboard";
@@ -92,6 +93,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['technician']}>
                     <Vehicles />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/technician/safety-equipment" 
+                element={
+                  <ProtectedRoute allowedRoles={['technician']}>
+                    <SafetyEquipment />
                   </ProtectedRoute>
                 } 
               />

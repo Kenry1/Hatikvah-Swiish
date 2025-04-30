@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -93,7 +92,8 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       technician: [
         { to: `${basePath}/fuel-requests`, icon: <Fuel />, label: "Fuel Requests" },
         { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
-        { to: `${basePath}/material-requests`, icon: <Package />, label: "Materials" }
+        { to: `${basePath}/material-requests`, icon: <Package />, label: "Materials" },
+        { to: `${basePath}/safety-equipment`, icon: <Shield />, label: "Safety Equipment" }
       ],
       warehouse: [
         { to: `${basePath}/material-requests`, icon: <Package />, label: "Material Requests" },
