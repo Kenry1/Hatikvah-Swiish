@@ -80,6 +80,12 @@ const mockUsers = {
     email: "ehs@swiish.com",
     role: "ehs" as UserRole,
     name: "Drew EHS"
+  },
+  procurement: {
+    id: "procurement-123",
+    email: "procurement@swiish.com",
+    role: "procurement" as UserRole,
+    name: "John Doe Procurement"
   }
 };
 

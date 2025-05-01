@@ -144,6 +144,7 @@ export default function Login() {
                     <SelectItem value="finance">Finance</SelectItem>
                     <SelectItem value="management">Management</SelectItem>
                     <SelectItem value="ehs">EHS</SelectItem>
+                    <SelectItem value="procurement">Procurement</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -158,7 +159,7 @@ export default function Login() {
             For demo purposes, use these emails: tech@swiish.com, warehouse@swiish.com, 
             logistics@swiish.com, hr@swiish.com, im@swiish.com, pm@swiish.com, 
             planning@swiish.com, it@swiish.com, finance@swiish.com, 
-            management@swiish.com, ehs@swiish.com. 
+            management@swiish.com, ehs@swiish.com, procurement@swiish.com. 
             Any password works.
           </p>
         </CardFooter>
