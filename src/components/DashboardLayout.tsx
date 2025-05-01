@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks, ShoppingCart } from 'lucide-react';
+import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 import { ThemeToggle } from './ThemeToggle';
@@ -128,25 +127,22 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       ],
       it: [
         { to: `${basePath}`, icon: <Database />, label: "Systems" },
-        { to: `${basePath}`, icon: <Settings />, label: "Configuration" },
-        { to: `/procurement`, icon: <ShoppingCart />, label: "Procurement" }
+        { to: `${basePath}`, icon: <Settings />, label: "Configuration" }
       ],
       finance: [
         { to: `${basePath}`, icon: <FileText />, label: "Reports" },
-        { to: `${basePath}`, icon: <FolderOpen />, label: "Budgets" },
-        { to: `/procurement`, icon: <ShoppingCart />, label: "Procurement" }
+        { to: `${basePath}`, icon: <FolderOpen />, label: "Budgets" }
       ],
       management: [
         { to: `${basePath}`, icon: <Users />, label: "Departments" },
-        { to: `${basePath}`, icon: <FileText />, label: "Reports" },
-        { to: `/procurement`, icon: <ShoppingCart />, label: "Procurement" }
+        { to: `${basePath}`, icon: <FileText />, label: "Reports" }
       ],
       ehs: [
         { to: `${basePath}`, icon: <Shield />, label: "Dashboard" },
         { to: `${basePath}/overview`, icon: <FileText />, label: "Safety Requests" }
       ],
       procurement: [
-        { to: `${basePath}`, icon: <ShoppingCart />, label: "Dashboard" }
+        { to: `${basePath}`, icon: <Briefcase />, label: "Dashboard" }
       ]
     };
 
