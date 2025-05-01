@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
@@ -187,7 +188,7 @@ const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
-  // Removing the incorrect constraint, allowing TKeyName to be any string
+  // Fix: Allow TKeyName to be any string, not just "id"
   TKeyName extends string = "id"
 >({
   name,

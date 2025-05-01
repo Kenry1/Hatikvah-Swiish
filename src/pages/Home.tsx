@@ -48,6 +48,9 @@ const Home = () => {
       case 'ehs':
         navigate('/ehs');
         break;
+      case 'procurement':
+        navigate('/procurement');
+        break;
       default:
         navigate('/login');
         break;

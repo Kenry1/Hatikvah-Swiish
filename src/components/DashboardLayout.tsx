@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks } from 'lucide-react';
+import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 import { ThemeToggle } from './ThemeToggle';
@@ -72,6 +73,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       case 'finance': return '/finance';
       case 'management': return '/management';
       case 'ehs': return '/ehs';
+      case 'procurement': return '/procurement';
       default: return '/';
     }
   };
@@ -98,7 +100,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       warehouse: [
         { to: `${basePath}/material-requests`, icon: <Package />, label: "Material Requests" },
         { to: `${basePath}/inventory`, icon: <Package />, label: "Inventory" },
-        { to: `${basePath}/ehs-issuance`, icon: <Shield />, label: "EHS Issuance" } // New EHS link for Warehouse
+        { to: `${basePath}/ehs-issuance`, icon: <Shield />, label: "EHS Issuance" }
       ],
       logistics: [
         { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
@@ -111,13 +113,13 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       ],
       implementation_manager: [
         { to: `${basePath}`, icon: <Briefcase />, label: "Projects" },
-        { to: `${basePath}/ehs-requests`, icon: <Shield />, label: "EHS Requests" }, // New EHS link for Implementation Manager
+        { to: `${basePath}/ehs-requests`, icon: <Shield />, label: "EHS Requests" },
         { to: `${basePath}`, icon: <Calendar />, label: "Schedule" }
       ],
       project_manager: [
         { to: `${basePath}/overview`, icon: <ChartGantt />, label: "Project Overview" },
         { to: `${basePath}/approvals`, icon: <FileText />, label: "Request Approvals" },
-        { to: `${basePath}/ehs-approvals`, icon: <Shield />, label: "EHS Approvals" }, // New EHS link for Project Manager
+        { to: `${basePath}/ehs-approvals`, icon: <Shield />, label: "EHS Approvals" },
         { to: `${basePath}/tasks`, icon: <ListChecks />, label: "Task Assignments" }
       ],
       planning: [
@@ -126,19 +128,25 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
       ],
       it: [
         { to: `${basePath}`, icon: <Database />, label: "Systems" },
-        { to: `${basePath}`, icon: <Settings />, label: "Configuration" }
+        { to: `${basePath}`, icon: <Settings />, label: "Configuration" },
+        { to: `/procurement`, icon: <ShoppingCart />, label: "Procurement" }
       ],
       finance: [
         { to: `${basePath}`, icon: <FileText />, label: "Reports" },
-        { to: `${basePath}`, icon: <FolderOpen />, label: "Budgets" }
+        { to: `${basePath}`, icon: <FolderOpen />, label: "Budgets" },
+        { to: `/procurement`, icon: <ShoppingCart />, label: "Procurement" }
       ],
       management: [
         { to: `${basePath}`, icon: <Users />, label: "Departments" },
-        { to: `${basePath}`, icon: <FileText />, label: "Reports" }
+        { to: `${basePath}`, icon: <FileText />, label: "Reports" },
+        { to: `/procurement`, icon: <ShoppingCart />, label: "Procurement" }
       ],
       ehs: [
         { to: `${basePath}`, icon: <Shield />, label: "Dashboard" },
-        { to: `${basePath}/overview`, icon: <FileText />, label: "Safety Requests" } // New link to EHS overview page
+        { to: `${basePath}/overview`, icon: <FileText />, label: "Safety Requests" }
+      ],
+      procurement: [
+        { to: `${basePath}`, icon: <ShoppingCart />, label: "Dashboard" }
       ]
     };
 
@@ -159,7 +167,10 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           <div className="flex items-center">
             {!isCollapsed && (
-              <span className="font-bold text-xl text-primary">Swiish</span>
+              <div className="flex items-center">
+                <span className="text-xs text-primary mr-1 mt-1.5">Hatikvah</span>
+                <span className="font-bold text-xl text-primary">Swiish</span>
+              </div>
             )}
             {isCollapsed && (
               <span className="font-bold text-xl text-primary">S</span>

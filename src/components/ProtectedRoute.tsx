@@ -29,18 +29,34 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   // Check role-based access
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to the appropriate dashboard based on their role
-    if (user.role === 'technician') {
-      return <Navigate to="/technician" replace />;
+    switch (user.role) {
+      case 'technician':
+        return <Navigate to="/technician" replace />;
+      case 'warehouse':
+        return <Navigate to="/warehouse" replace />;
+      case 'logistics':
+        return <Navigate to="/logistics" replace />;
+      case 'hr':
+        return <Navigate to="/hr" replace />;
+      case 'implementation_manager':
+        return <Navigate to="/implementation-manager" replace />;
+      case 'project_manager':
+        return <Navigate to="/project-manager" replace />;
+      case 'planning':
+        return <Navigate to="/planning" replace />;
+      case 'it':
+        return <Navigate to="/it" replace />;
+      case 'finance':
+        return <Navigate to="/finance" replace />;
+      case 'management':
+        return <Navigate to="/management" replace />;
+      case 'ehs':
+        return <Navigate to="/ehs" replace />;
+      case 'procurement':
+        return <Navigate to="/procurement" replace />;
+      default:
+        return <Navigate to="/login" replace />;
     }
-    if (user.role === 'warehouse') {
-      return <Navigate to="/warehouse" replace />;
-    }
-    if (user.role === 'logistics') {
-      return <Navigate to="/logistics" replace />;
-    }
-    
-    // Fallback to login in case of issues
-    return <Navigate to="/login" replace />;
   }
 
   // Render children if authenticated and authorized
