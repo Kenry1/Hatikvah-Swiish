@@ -175,10 +175,9 @@ FormMessage.displayName = "FormMessage"
 type FormFieldArrayContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
-  TKeyName extends string = "id"
 > = {
   name: TFieldArrayName
-  keyName: TKeyName
+  keyName: string
 }
 
 const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
@@ -188,22 +187,20 @@ const FormFieldArrayContext = React.createContext<FormFieldArrayContextValue>(
 const FormFieldArray = <
   TFieldValues extends FieldValues = FieldValues,
   TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
-  // Fix: Allow TKeyName to be any string, not just "id"
-  TKeyName extends string = "id"
 >({
   name,
-  keyName = "id" as TKeyName,
+  keyName = "id",
   children,
 }: {
   name: TFieldArrayName
-  keyName?: TKeyName
-  children: (props: UseFieldArrayReturn<TFieldValues, TFieldArrayName, TKeyName>) => React.ReactNode
+  keyName?: string
+  children: (props: UseFieldArrayReturn<TFieldValues, TFieldArrayName, "id">) => React.ReactNode
 }) => {
   const methods = useFormContext<TFieldValues>()
-  const fieldArrayMethods = useFieldArray<TFieldValues, TFieldArrayName, TKeyName>({
+  const fieldArrayMethods = useFieldArray<TFieldValues, TFieldArrayName, "id">({
     control: methods.control,
     name,
-    keyName,
+    keyName: "id",
   })
 
   return (

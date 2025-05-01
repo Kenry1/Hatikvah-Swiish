@@ -1,4 +1,3 @@
-
 export type UserRole =
   | 'technician'
   | 'warehouse'
@@ -38,45 +37,35 @@ export interface Vehicle {
 
 export interface FuelRequest {
   id: string;
-  requestId: string;
-  userId: string;
-  userName: string;
-  vehicleId: string;
-  vehiclePlate: string;
-  requestDate: string;
+  technicianId?: string;
+  technicianName: string;
+  fuelType: 'petrol' | 'diesel' | 'electric';
   amount: number;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  approvedBy?: string;
-  approvedDate?: string;
-  notes?: string;
+  purpose: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed' | 'acknowledged';
+  createdAt: string;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  stockQuantity: number;
+  category: string;
+}
+
+export interface MaterialRequestItem {
+  materialId: string;
+  materialName: string;
+  quantity: number;
 }
 
 export interface MaterialRequest {
   id: string;
-  requestId: string;
-  userId: string;
-  userName: string;
-  siteName: string;
-  siteLocation: string;
-  requestDate: string;
-  materials: MaterialItem[];
-  status: 'pending' | 'approved' | 'ready' | 'delivered';
-  priority: 'low' | 'medium' | 'high';
-  approvedBy?: string;
-  approvedDate?: string;
-  readyBy?: string;
-  readyDate?: string;
-  deliveredBy?: string;
-  deliveredDate?: string;
-  notes?: string;
-}
-
-export interface MaterialItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
+  technicianId?: string;
+  technicianName: string;
+  items: MaterialRequestItem[];
+  status: 'pending' | 'approved' | 'rejected' | 'issued' | 'completed';
+  createdAt: string;
 }
 
 // Types for the Procurement system
