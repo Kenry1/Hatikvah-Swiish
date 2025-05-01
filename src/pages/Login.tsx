@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types";
+import QRCodeDownload from "@/components/QRCodeDownload";
 
 export default function Login() {
   const { signIn, demoLogin } = useAuth();
@@ -18,6 +19,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [demoRole, setDemoRole] = useState<UserRole | "">("");
+  const [showQRCode, setShowQRCode] = useState(false);
+
+  // Current app URL for QR code
+  const appUrl = window.location.origin;
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +84,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -152,6 +157,18 @@ export default function Login() {
                 {loading ? "Logging in..." : "Login as Demo User"}
               </Button>
             </div>
+          </div>
+          
+          <div className="mt-6 text-center">
+            <Button 
+              variant="link" 
+              onClick={() => setShowQRCode(!showQRCode)} 
+              className="text-sm"
+            >
+              {showQRCode ? "Hide" : "Show"} QR code for mobile testing
+            </Button>
+            
+            {showQRCode && <QRCodeDownload appUrl={appUrl} />}
           </div>
         </CardContent>
         <CardFooter>
