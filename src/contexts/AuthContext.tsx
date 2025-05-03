@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, UserRole } from "../types";
 
@@ -93,16 +94,27 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  // Initialize with a null user and loading state
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Effects must be inside the component body
   useEffect(() => {
     // Check local storage for saved user
-    const savedUser = localStorage.getItem('swiishUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    const checkForSavedUser = () => {
+      const savedUser = localStorage.getItem('swiishUser');
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (error) {
+          console.error("Failed to parse saved user:", error);
+          localStorage.removeItem('swiishUser'); // Clear invalid data
+        }
+      }
+      setIsLoading(false);
+    };
+    
+    checkForSavedUser();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -187,8 +199,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // Use the mock user for the selected role
       const demoUser = mockUsers[role];
-      setUser(demoUser);
-      localStorage.setItem('swiishUser', JSON.stringify(demoUser));
+      if (demoUser) {
+        setUser(demoUser);
+        localStorage.setItem('swiishUser', JSON.stringify(demoUser));
+      } else {
+        throw new Error(`No demo user available for role: ${role}`);
+      }
     } catch (error) {
       console.error("Demo login error:", error);
       throw error;
