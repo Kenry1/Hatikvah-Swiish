@@ -237,6 +237,22 @@ const App = () => (
                       </ProtectedRoute>
                     } 
                   />
+                  <Route 
+                    path="/hr/employees" 
+                    element={
+                      <ProtectedRoute allowedRoles={['hr']}>
+                        <Employees />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/hr/employees/new" 
+                    element={
+                      <ProtectedRoute allowedRoles={['hr']}>
+                        <NewEmployee />
+                      </ProtectedRoute>
+                    } 
+                  />
                   
                   {/* Implementation Manager Routes */}
                   <Route 

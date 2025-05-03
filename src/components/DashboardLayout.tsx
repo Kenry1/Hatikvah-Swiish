@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import {
   Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, 
   FileText, Users, Briefcase, Calendar, Settings, Database, 
   Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks,
-  Building, UserCog, List, Archive
+  Building, UserCog, List, Archive, UserPlus, ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
@@ -115,7 +116,9 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
         { to: `${basePath}/manage-account`, icon: <UserCog />, label: "Manage Account" }
       ],
       hr: [
-        { to: `${basePath}`, icon: <Users />, label: "Employees" },
+        { to: `${basePath}/employees`, icon: <Users />, label: "Employees" },
+        { to: `${basePath}/employees/new`, icon: <UserPlus />, label: "Add Employee" },
+        { to: `${basePath}`, icon: <ClipboardList />, label: "Applications" },
         { to: `${basePath}`, icon: <FileText />, label: "Documents" }
       ],
       implementation_manager: [
