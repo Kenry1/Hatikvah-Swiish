@@ -8,9 +8,11 @@ import { PerformanceGraphs } from '@/components/hr/PerformanceGraphs';
 import { LeaveApplicationForm } from '@/components/hr/LeaveApplicationForm';
 import { FieldTripApplicationForm } from '@/components/hr/FieldTripApplicationForm';
 import { AIInsights } from '@/components/hr/AIInsights';
+import { useNavigate } from 'react-router-dom';
 
 const HRDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const navigate = useNavigate();
   
   return (
     <DashboardLayout>
@@ -23,10 +25,11 @@ const HRDashboard = () => {
         </div>
 
         <Tabs defaultValue="dashboard" onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-3 mb-4">
+          <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-4 mb-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="employees">Employees</TabsTrigger>
+            <TabsTrigger value="documents" onClick={() => navigate('/hr/documents')}>Documents</TabsTrigger>
           </TabsList>
           
           <TabsContent value="dashboard" className="space-y-6">
@@ -65,7 +68,7 @@ const HRDashboard = () => {
                   <CardTitle>Employees</CardTitle>
                   <CardDescription>Manage company employees and their profiles</CardDescription>
                 </div>
-                <Button onClick={() => window.location.href = '/hr/employees/new'}>Add New Employee</Button>
+                <Button onClick={() => navigate('/hr/employees/new')}>Add New Employee</Button>
               </CardHeader>
               <CardContent>
                 <EmployeesTable />
@@ -79,12 +82,15 @@ const HRDashboard = () => {
 };
 
 const EmployeesTable = () => {
-  // This is a temporary placeholder - we'll create a full component for this
+  const navigate = useNavigate();
+  
   return (
     <div className="py-4">
       <p>Employee listing will appear here. Click "Add New Employee" to create a new employee.</p>
       <p className="text-muted-foreground mt-2">
-        <a href="/hr/employees" className="hover:underline text-primary">View all employees</a>
+        <Button variant="link" onClick={() => navigate('/hr/employees')} className="p-0">
+          View all employees
+        </Button>
       </p>
     </div>
   );

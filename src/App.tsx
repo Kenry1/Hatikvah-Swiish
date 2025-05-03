@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,6 +42,9 @@ import LogisticsManageAccount from "./pages/logistics/ManageAccount";
 import HRDashboard from "./pages/hr/HRDashboard";
 import Employees from "./pages/hr/Employees";
 import NewEmployee from "./pages/hr/NewEmployee";
+import Documents from "./pages/hr/Documents";
+import EmployeeDocuments from "./pages/hr/EmployeeDocuments";
+import ManageAccount from "./pages/hr/ManageAccount";
 import IMDashboard from "./pages/implementation_manager/IMDashboard";
 import PMDashboard from "./pages/project_manager/PMDashboard";
 import ProjectOverview from "./pages/project_manager/ProjectOverview";
@@ -255,6 +259,30 @@ const App = () => {
                       element={
                         <ProtectedRoute allowedRoles={['hr']}>
                           <NewEmployee />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/hr/documents" 
+                      element={
+                        <ProtectedRoute allowedRoles={['hr']}>
+                          <Documents />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/hr/documents/:employeeId" 
+                      element={
+                        <ProtectedRoute allowedRoles={['hr']}>
+                          <EmployeeDocuments />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/hr/manage-account" 
+                      element={
+                        <ProtectedRoute allowedRoles={['hr']}>
+                          <ManageAccount />
                         </ProtectedRoute>
                       } 
                     />
