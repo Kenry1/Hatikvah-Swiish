@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/contexts/AuthContext';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -9,9 +10,11 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {children}
-    </div>
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen">
+        {children}
+      </div>
+    </SidebarProvider>
   );
 };
 
