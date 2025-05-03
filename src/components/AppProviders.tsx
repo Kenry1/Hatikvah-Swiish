@@ -1,0 +1,36 @@
+
+import { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { EHSProvider } from '@/contexts/EHSContext';
+import { ProcurementProvider } from '@/contexts/ProcurementContext';
+
+interface AppProvidersProps {
+  children: ReactNode;
+}
+
+export const AppProviders = ({ children }: AppProvidersProps) => {
+  const queryClient = new QueryClient();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider>
+          <EHSProvider>
+            <ProcurementProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                {children}
+              </TooltipProvider>
+            </ProcurementProvider>
+          </EHSProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
