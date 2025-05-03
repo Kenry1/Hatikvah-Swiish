@@ -2,12 +2,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -15,326 +23,316 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
 
-const DEPARTMENTS = [
-  { value: 'engineering', label: 'Engineering' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'sales', label: 'Sales' },
-  { value: 'hr', label: 'HR' },
-  { value: 'operations', label: 'Operations' },
-  { value: 'finance', label: 'Finance' },
-];
-
-const ROLES = {
-  engineering: [
-    { value: 'developer', label: 'Developer' },
-    { value: 'senior_developer', label: 'Senior Developer' },
-    { value: 'tech_lead', label: 'Tech Lead' },
-    { value: 'qa_engineer', label: 'QA Engineer' },
-  ],
-  marketing: [
-    { value: 'marketing_specialist', label: 'Marketing Specialist' },
-    { value: 'content_creator', label: 'Content Creator' },
-    { value: 'social_media_manager', label: 'Social Media Manager' },
-  ],
-  sales: [
-    { value: 'sales_representative', label: 'Sales Representative' },
-    { value: 'account_manager', label: 'Account Manager' },
-    { value: 'sales_director', label: 'Sales Director' },
-  ],
-  hr: [
-    { value: 'hr_assistant', label: 'HR Assistant' },
-    { value: 'hr_specialist', label: 'HR Specialist' },
-    { value: 'hr_manager', label: 'HR Manager' },
-  ],
-  operations: [
-    { value: 'operations_analyst', label: 'Operations Analyst' },
-    { value: 'operations_manager', label: 'Operations Manager' },
-    { value: 'logistics_coordinator', label: 'Logistics Coordinator' },
-  ],
-  finance: [
-    { value: 'accountant', label: 'Accountant' },
-    { value: 'financial_analyst', label: 'Financial Analyst' },
-    { value: 'finance_manager', label: 'Finance Manager' },
-  ],
-};
-
-const PERMISSIONS = [
-  { id: 'internal_systems', label: 'Internal Systems' },
-  { id: 'project_management', label: 'Project Management' },
-  { id: 'customer_data', label: 'Customer Data' },
-  { id: 'financial_data', label: 'Financial Data' },
-  { id: 'reporting', label: 'Reporting' },
-  { id: 'code_repository', label: 'Code Repository' },
-  { id: 'sales_data', label: 'Sales Data' },
-  { id: 'inventory', label: 'Inventory' },
-  { id: 'employee_records', label: 'Employee Records' },
-  { id: 'recruitment', label: 'Recruitment' },
-];
-
-interface FormData {
+type NewEmployeeFormValues = {
   username: string;
   password: string;
-  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   department: string;
   role: string;
   permissions: string[];
-}
+};
+
+// Available permissions by role
+const rolePermissions = {
+  "technician": ["request_materials", "request_fuel", "view_vehicles", "request_ehs"],
+  "warehouse": ["manage_inventory", "approve_requests", "manage_assets", "issue_ehs"],
+  "logistics": ["manage_vehicles", "approve_fuel", "assign_vehicles"],
+  "hr": ["manage_employees", "approve_leave", "manage_documents"],
+  "implementation_manager": ["manage_projects", "request_ehs", "assign_tasks"],
+  "project_manager": ["approve_requests", "manage_tasks", "view_reports", "approve_ehs"],
+  "planning": ["create_plans", "view_resources", "generate_reports"],
+  "it": ["manage_systems", "user_access", "technical_support"],
+  "finance": ["manage_budget", "approve_payments", "financial_reporting"],
+  "management": ["all_access", "strategic_decisions", "company_overview"],
+  "ehs": ["manage_safety", "issue_equipment", "safety_reports"]
+};
 
 const NewEmployee = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    department: '',
-    role: '',
-    permissions: [],
+
+  const form = useForm<NewEmployeeFormValues>({
+    defaultValues: {
+      username: "",
+      password: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      department: "",
+      role: "",
+      permissions: [],
+    },
   });
+
+  const selectedRole = form.watch("role");
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleDepartmentChange = (value: string) => {
-    setFormData(prev => ({ ...prev, department: value, role: '' }));
-  };
-  
-  const handleRoleChange = (value: string) => {
-    setFormData(prev => ({ ...prev, role: value }));
-  };
-  
-  const handlePermissionChange = (permission: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({
-        ...prev,
-        permissions: [...prev.permissions, permission],
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        permissions: prev.permissions.filter(p => p !== permission),
-      }));
-    }
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: NewEmployeeFormValues) => {
     setIsSubmitting(true);
     
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
+    try {
+      // In a real application, this would be an API call to create the user
+      console.log("Creating new employee:", data);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match",
+        title: "Employee Created",
+        description: `${data.firstName} ${data.lastName} has been added to the system`,
+      });
+      
+      navigate("/hr/employees");
+    } catch (error) {
+      console.error("Error creating employee:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem creating the employee",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-    
-    if (!formData.department || !formData.role) {
-      toast({
-        title: "Missing information",
-        description: "Please select a department and role",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-    
-    // In a real application, you would send this data to an API
-    setTimeout(() => {
-      toast({
-        title: "Employee created",
-        description: `${formData.username} has been added successfully`,
-      });
-      setIsSubmitting(false);
-      navigate('/hr/employees');
-    }, 1500);
   };
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Add New Employee</h1>
             <p className="text-muted-foreground">
-              Create a new employee account and set up access controls
+              Create a new employee account and set permissions
             </p>
           </div>
-          <Button variant="ghost" onClick={() => navigate('/hr/employees')}>
-            Back to Employees
+          <Button variant="outline" onClick={() => navigate("/hr/employees")}>
+            Cancel
           </Button>
         </div>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Information</CardTitle>
-                <CardDescription>
-                  Set up login credentials for the new employee
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      name="username"
-                      placeholder="Enter username"
-                      required
-                      value={formData.username}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="Enter password"
-                      required
-                      value={formData.password}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="Confirm password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Department & Role</CardTitle>
-                <CardDescription>
-                  Assign the employee to a department and role
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Select onValueChange={handleDepartmentChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DEPARTMENTS.map(dept => (
-                          <SelectItem key={dept.value} value={dept.value}>
-                            {dept.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select 
-                      onValueChange={handleRoleChange} 
-                      disabled={!formData.department}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={
-                          formData.department ? "Select role" : "Select department first"
-                        } />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {formData.department && ROLES[formData.department as keyof typeof ROLES].map(role => (
-                          <SelectItem key={role.value} value={role.value}>
-                            {role.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Permissions & Access Rights</CardTitle>
-                <CardDescription>
-                  Select the access permissions for this employee
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-3">General Permissions</h4>
-                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                      {PERMISSIONS.slice(0, 5).map(permission => (
-                        <div key={permission.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={permission.id}
-                            checked={formData.permissions.includes(permission.id)}
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(permission.id, checked as boolean)
-                            }
-                          />
-                          <Label htmlFor={permission.id}>{permission.label}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Employee Information</CardTitle>
+            <CardDescription>
+              Enter details for the new employee. They'll receive access credentials via email.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter first name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-3">Department-Specific Permissions</h4>
-                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                      {PERMISSIONS.slice(5).map(permission => (
-                        <div key={permission.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={permission.id}
-                            checked={formData.permissions.includes(permission.id)}
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(permission.id, checked as boolean)
-                            }
-                          />
-                          <Label htmlFor={permission.id}>{permission.label}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter last name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/hr/employees')}
-                  type="button"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create Employee"}
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </form>
+                
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="employee@company.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Username for login" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Temporary Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Set a temporary password" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Employee will be prompted to change this on first login
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select department" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="engineering">Engineering</SelectItem>
+                            <SelectItem value="marketing">Marketing</SelectItem>
+                            <SelectItem value="sales">Sales</SelectItem>
+                            <SelectItem value="hr">HR</SelectItem>
+                            <SelectItem value="operations">Operations</SelectItem>
+                            <SelectItem value="finance">Finance</SelectItem>
+                            <SelectItem value="it">IT</SelectItem>
+                            <SelectItem value="management">Management</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="technician">Technician</SelectItem>
+                            <SelectItem value="warehouse">Warehouse Manager</SelectItem>
+                            <SelectItem value="logistics">Logistics Manager</SelectItem>
+                            <SelectItem value="hr">HR Personnel</SelectItem>
+                            <SelectItem value="implementation_manager">Implementation Manager</SelectItem>
+                            <SelectItem value="project_manager">Project Manager</SelectItem>
+                            <SelectItem value="planning">Planning Officer</SelectItem>
+                            <SelectItem value="it">IT Support</SelectItem>
+                            <SelectItem value="finance">Finance Officer</SelectItem>
+                            <SelectItem value="management">Management</SelectItem>
+                            <SelectItem value="ehs">EHS Officer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                {selectedRole && (
+                  <FormField
+                    control={form.control}
+                    name="permissions"
+                    render={() => (
+                      <FormItem>
+                        <div className="mb-4">
+                          <FormLabel className="text-base">Permissions</FormLabel>
+                          <FormDescription>
+                            Select permissions for this employee based on their role
+                          </FormDescription>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {rolePermissions[selectedRole as keyof typeof rolePermissions]?.map((permission) => (
+                            <FormField
+                              key={permission}
+                              control={form.control}
+                              name="permissions"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={permission}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(permission)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, permission])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== permission
+                                                )
+                                              )
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {permission.split('_').map(word => 
+                                        word.charAt(0).toUpperCase() + word.slice(1)
+                                      ).join(' ')}
+                                    </FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/hr/employees")}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Creating..." : "Create Employee"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

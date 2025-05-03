@@ -39,6 +39,8 @@ import LogisticsManageAccount from "./pages/logistics/ManageAccount";
 
 // New Role Pages
 import HRDashboard from "./pages/hr/HRDashboard";
+import Employees from "./pages/hr/Employees";
+import NewEmployee from "./pages/hr/NewEmployee";
 import IMDashboard from "./pages/implementation_manager/IMDashboard";
 import PMDashboard from "./pages/project_manager/PMDashboard";
 import ProjectOverview from "./pages/project_manager/ProjectOverview";
