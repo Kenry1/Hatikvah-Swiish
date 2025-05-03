@@ -3,7 +3,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, FileText, Users, Briefcase, Calendar, Settings, Database, Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks } from 'lucide-react';
+import { 
+  Car, Package, Fuel, LogOut, Menu, X, User, ChevronRight, 
+  FileText, Users, Briefcase, Calendar, Settings, Database, 
+  Shield, LayoutDashboard, FolderOpen, ChartGantt, ListChecks,
+  Building, UserCog, List, Archive
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 import { ThemeToggle } from './ThemeToggle';
@@ -97,14 +102,17 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
         { to: `${basePath}/safety-equipment`, icon: <Shield />, label: "Safety Equipment" }
       ],
       warehouse: [
-        { to: `${basePath}/material-requests`, icon: <Package />, label: "Material Requests" },
+        { to: `${basePath}/material-requests`, icon: <List />, label: "Material Requests" },
         { to: `${basePath}/inventory`, icon: <Package />, label: "Inventory" },
-        { to: `${basePath}/ehs-issuance`, icon: <Shield />, label: "EHS Issuance" }
+        { to: `${basePath}/assets`, icon: <Building />, label: "Company Assets" },
+        { to: `${basePath}/all-requests`, icon: <FileText />, label: "View All Requests" },
+        { to: `${basePath}/ehs-issuance`, icon: <Shield />, label: "EHS Issuance" },
+        { to: `${basePath}/manage-account`, icon: <UserCog />, label: "Manage Account" }
       ],
       logistics: [
         { to: `${basePath}/vehicles`, icon: <Car />, label: "Vehicles" },
         { to: `${basePath}/fuel-requests`, icon: <Fuel />, label: "Fuel Requests" },
-        { to: `${basePath}/manage-account`, icon: <User />, label: "Manage Account" }
+        { to: `${basePath}/manage-account`, icon: <UserCog />, label: "Manage Account" }
       ],
       hr: [
         { to: `${basePath}`, icon: <Users />, label: "Employees" },

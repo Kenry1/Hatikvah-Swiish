@@ -25,6 +25,9 @@ import SafetyEquipment from "./pages/technician/SafetyEquipment";
 import WarehouseDashboard from "./pages/warehouse/WarehouseDashboard";
 import WarehouseMaterialRequests from "./pages/warehouse/MaterialRequests";
 import Inventory from "./pages/warehouse/Inventory";
+import Assets from "./pages/warehouse/Assets";
+import AllRequests from "./pages/warehouse/AllRequests";
+import ManageAccount from "./pages/warehouse/ManageAccount";
 
 // Logistics Pages
 import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
@@ -32,7 +35,7 @@ import { default as LogisticsVehicles } from "./pages/logistics/Vehicles";
 import LogisticsFuelRequests from "./pages/logistics/FuelRequests";
 import AddVehicle from "./pages/logistics/AddVehicle";
 import AssignVehicle from "./pages/logistics/AssignVehicle";
-import ManageAccount from "./pages/logistics/ManageAccount";
+import LogisticsManageAccount from "./pages/logistics/ManageAccount";
 
 // New Role Pages
 import HRDashboard from "./pages/hr/HRDashboard";
@@ -143,6 +146,30 @@ const App = () => (
                     } 
                   />
                   <Route 
+                    path="/warehouse/assets" 
+                    element={
+                      <ProtectedRoute allowedRoles={['warehouse']}>
+                        <Assets />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/warehouse/all-requests" 
+                    element={
+                      <ProtectedRoute allowedRoles={['warehouse']}>
+                        <AllRequests />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/warehouse/manage-account" 
+                    element={
+                      <ProtectedRoute allowedRoles={['warehouse']}>
+                        <ManageAccount />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
                     path="/warehouse/ehs-issuance" 
                     element={
                       <ProtectedRoute allowedRoles={['warehouse']}>
@@ -196,7 +223,7 @@ const App = () => (
                     path="/logistics/manage-account" 
                     element={
                       <ProtectedRoute allowedRoles={['logistics']}>
-                        <ManageAccount />
+                        <LogisticsManageAccount />
                       </ProtectedRoute>
                     } 
                   />
