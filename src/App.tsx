@@ -28,7 +28,7 @@ import WarehouseMaterialRequests from "./pages/warehouse/MaterialRequests";
 import Inventory from "./pages/warehouse/Inventory";
 import Assets from "./pages/warehouse/Assets";
 import AllRequests from "./pages/warehouse/AllRequests";
-import ManageAccount from "./pages/warehouse/ManageAccount";
+import WarehouseManageAccount from "./pages/warehouse/ManageAccount";
 
 // Logistics Pages
 import LogisticsDashboard from "./pages/logistics/LogisticsDashboard";
@@ -44,7 +44,7 @@ import Employees from "./pages/hr/Employees";
 import NewEmployee from "./pages/hr/NewEmployee";
 import Documents from "./pages/hr/Documents";
 import EmployeeDocuments from "./pages/hr/EmployeeDocuments";
-import ManageAccount from "./pages/hr/ManageAccount";
+import HRManageAccount from "./pages/hr/ManageAccount";
 import IMDashboard from "./pages/implementation_manager/IMDashboard";
 import PMDashboard from "./pages/project_manager/PMDashboard";
 import ProjectOverview from "./pages/project_manager/ProjectOverview";
@@ -174,7 +174,7 @@ const App = () => {
                       path="/warehouse/manage-account" 
                       element={
                         <ProtectedRoute allowedRoles={['warehouse']}>
-                          <ManageAccount />
+                          <WarehouseManageAccount />
                         </ProtectedRoute>
                       } 
                     />
@@ -282,7 +282,7 @@ const App = () => {
                       path="/hr/manage-account" 
                       element={
                         <ProtectedRoute allowedRoles={['hr']}>
-                          <ManageAccount />
+                          <HRManageAccount />
                         </ProtectedRoute>
                       } 
                     />
