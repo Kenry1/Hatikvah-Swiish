@@ -130,7 +130,7 @@ const TaskAssignments = () => {
       deadline: new Date(),
       project: 'Network Infrastructure Upgrade'
     }
-  };
+  });
   
   const handleFilterChange = (filter: string) => {
     setTaskFilter(filter);
