@@ -6,12 +6,14 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
+  sidebar?: ReactNode;
 }
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, sidebar }: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
       <div className="flex w-full min-h-screen">
+        {sidebar}
         {children}
       </div>
     </SidebarProvider>

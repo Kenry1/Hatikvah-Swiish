@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +13,7 @@ const TechnicianDashboard = () => {
   const navigate = useNavigate();
   
   return (
-    <DashboardLayout>
-      <TechnicianSidebar />
+    <DashboardLayout sidebar={<TechnicianSidebar />}>
       <SidebarInset>
         <div className="space-y-6 p-6">
           <div>

@@ -29,8 +29,7 @@ const RoleDashboardLayout = ({
   const { user } = useAuth();
 
   return (
-    <DashboardLayout>
-      {sidebar}
+    <DashboardLayout sidebar={sidebar}>
       <SidebarInset>
         <div className="flex flex-col space-y-8 p-6">
           <div>
