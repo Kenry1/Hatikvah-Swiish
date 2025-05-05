@@ -2,7 +2,7 @@
 import { RouteObject } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogisticsDashboard from '@/pages/logistics/LogisticsDashboard';
-import { default as LogisticsVehicles } from '@/pages/logistics/Vehicles';
+import LogisticsVehicles from '@/pages/logistics/Vehicles';
 import LogisticsFuelRequests from '@/pages/logistics/FuelRequests';
 import AddVehicle from '@/pages/logistics/AddVehicle';
 import AssignVehicle from '@/pages/logistics/AssignVehicle';
