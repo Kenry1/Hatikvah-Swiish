@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Package, Inventory, BoxesIcon, Clipboard, User, LogOut, Shield } from "lucide-react";
+import { Package, BoxesIcon, Clipboard, User, LogOut, Shield, Archive } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const WarehouseSidebar = () => {
@@ -73,7 +73,7 @@ export const WarehouseSidebar = () => {
               onClick={() => navigate("/warehouse/assets")}
               tooltip="Assets"
             >
-              <Inventory size={18} />
+              <Archive size={18} />
               <span>Assets</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -127,4 +127,3 @@ export const WarehouseSidebar = () => {
     </Sidebar>
   );
 };
-
