@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Package, Plus, Check, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormFieldArray } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, UseFieldArrayReturn } from 'react-hook-form';
 import { MaterialRequest, MaterialRequestItem, Material } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -76,7 +77,7 @@ const MaterialRequests = () => {
     }
   });
 
-  // Use useFieldArray hook properly
+  // Use useFieldArray hook properly with explicit typing
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "items"
