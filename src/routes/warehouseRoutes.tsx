@@ -8,6 +8,7 @@ import Assets from '@/pages/warehouse/Assets';
 import AllRequests from '@/pages/warehouse/AllRequests';
 import WarehouseManageAccount from '@/pages/warehouse/ManageAccount';
 import EHSIssuance from '@/pages/warehouse/EHSIssuance';
+import { WarehouseSidebar } from '@/components/warehouse/WarehouseSidebar';
 
 export const warehouseRoutes: RouteObject[] = [
   {
