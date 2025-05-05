@@ -1,5 +1,6 @@
 
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
+import { FinanceSidebar } from '@/components/finance/FinanceSidebar';
 
 const FinanceDashboard = () => {
   const newFeatures = [
@@ -23,6 +24,7 @@ const FinanceDashboard = () => {
       roleLabel="Finance"
       dashboardDescription="Manage budgets, expenses, and financial reporting."
       newFeatures={newFeatures}
+      sidebar={<FinanceSidebar />}
     />
   );
 };

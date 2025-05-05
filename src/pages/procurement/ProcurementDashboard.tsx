@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
 import { ShoppingCart, Package, Clock, History, Briefcase, Search } from 'lucide-react';
@@ -14,6 +13,7 @@ import RequestDetailsDialog from '@/components/procurement/RequestDetailsDialog'
 import SupplierDirectory from '@/components/procurement/SupplierDirectory';
 import OrderTrackingSection from '@/components/procurement/OrderTrackingSection';
 import { PurchaseRequest } from '@/types';
+import { ProcurementSidebar } from '@/components/procurement/ProcurementSidebar';
 
 const ProcurementDashboard = () => {
   const { user } = useAuth();
@@ -58,6 +58,7 @@ const ProcurementDashboard = () => {
       pageTitle="Procurement"
       roleLabel="Procurement"
       dashboardDescription="Manage purchase requests and track orders"
+      sidebar={<ProcurementSidebar />}
     >
       <div className="mb-6">
         <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab}>

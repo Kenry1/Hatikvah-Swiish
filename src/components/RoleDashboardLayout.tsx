@@ -15,6 +15,7 @@ interface RoleDashboardLayoutProps {
     title: string;
     description: string;
   }[];
+  sidebar?: ReactNode;
 }
 
 const RoleDashboardLayout = ({ 
@@ -22,12 +23,14 @@ const RoleDashboardLayout = ({
   pageTitle,
   roleLabel,
   dashboardDescription,
-  newFeatures = []
+  newFeatures = [],
+  sidebar
 }: RoleDashboardLayoutProps) => {
   const { user } = useAuth();
 
   return (
     <DashboardLayout>
+      {sidebar}
       <SidebarInset>
         <div className="flex flex-col space-y-8 p-6">
           <div>

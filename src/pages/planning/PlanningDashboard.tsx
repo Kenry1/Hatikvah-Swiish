@@ -1,5 +1,6 @@
 
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
+import { PlanningSidebar } from '@/components/planning/PlanningSidebar';
 
 const PlanningDashboard = () => {
   const newFeatures = [
@@ -23,6 +24,7 @@ const PlanningDashboard = () => {
       roleLabel="Planning"
       dashboardDescription="Optimize resource allocation and project scheduling."
       newFeatures={newFeatures}
+      sidebar={<PlanningSidebar />}
     />
   );
 };

@@ -1,5 +1,6 @@
 
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
+import { ManagementSidebar } from '@/components/management/ManagementSidebar';
 
 const ManagementDashboard = () => {
   const newFeatures = [
@@ -23,6 +24,7 @@ const ManagementDashboard = () => {
       roleLabel="Management"
       dashboardDescription="Oversee company operations and strategic direction."
       newFeatures={newFeatures}
+      sidebar={<ManagementSidebar />}
     />
   );
 };

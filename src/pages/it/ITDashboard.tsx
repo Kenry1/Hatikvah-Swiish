@@ -1,5 +1,6 @@
 
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
+import { ITSidebar } from '@/components/it/ITSidebar';
 
 const ITDashboard = () => {
   const newFeatures = [
@@ -23,6 +24,7 @@ const ITDashboard = () => {
       roleLabel="IT"
       dashboardDescription="Manage systems, support tickets, and equipment."
       newFeatures={newFeatures}
+      sidebar={<ITSidebar />}
     />
   );
 };
