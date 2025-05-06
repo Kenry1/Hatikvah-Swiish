@@ -5,12 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DepartmentSelector } from "./DepartmentSelector";
-import { DepartmentType } from "@/types/onboarding";
+import { DepartmentType, Profile } from "@/types/onboarding";
 
 export const ProfileForm = () => {
   const { profile, updateProfile, loading } = useOnboarding();
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    position: string;
+    department: DepartmentType | '';
+  }>({
     name: profile?.name || '',
     position: profile?.position || '',
     department: profile?.department || '',
@@ -27,7 +31,14 @@ export const ProfileForm = () => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(formData);
+    // Ensure we're passing the correct types when updating the profile
+    const updatedProfile: Partial<Profile> = {
+      name: formData.name,
+      position: formData.position,
+      // Only include department if it's not an empty string
+      ...(formData.department ? { department: formData.department } : {})
+    };
+    updateProfile(updatedProfile);
   };
   
   return (
