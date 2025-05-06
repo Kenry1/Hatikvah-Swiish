@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   DollarSign,
   Clipboard,
-  Tool,
+  // Tool was removed as it's not available in lucide-react
+  Wrench, // Adding this instead of Tool
   LogOut
 } from "lucide-react";
 
