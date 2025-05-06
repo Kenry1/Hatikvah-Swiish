@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DepartmentSelector } from "@/components/onboarding/DepartmentSelector";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -22,24 +21,78 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Filter, Plus, Trash2 } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { Department, OnboardingTask, OnboardingTaskProgress } from "@/types/onboarding";
+import { DepartmentType, OnboardingTask, UserOnboardingProgress } from "@/types/onboarding";
 import RoleDashboardLayout from "@/components/RoleDashboardLayout";
 import { Progress } from "@/components/ui/progress";
 
 export default function OnboardingManagement() {
   const { toast } = useToast();
-  const { tasks, employees, addTask, removeTask, updateTaskCompletion } = useOnboarding();
+  const { profile, tasks, progress, loading } = useOnboarding();
+  
+  // Mock data for HR management view
+  const [employees, setEmployees] = useState<Array<{
+    id: string;
+    name: string;
+    department: DepartmentType;
+    position: string;
+    progress: Array<{taskId: string; completed: boolean}>
+  }>>([
+    {
+      id: '1',
+      name: 'John Doe',
+      department: 'engineering',
+      position: 'Frontend Developer',
+      progress: [{taskId: 'task-1', completed: true}, {taskId: 'task-2', completed: false}]
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      department: 'hr',
+      position: 'HR Assistant',
+      progress: [{taskId: 'task-3', completed: true}, {taskId: 'task-4', completed: true}]
+    }
+  ]);
   
   // New task state
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [newTaskDepartment, setNewTaskDepartment] = useState<Department | ''>('');
+  const [newTaskDepartment, setNewTaskDepartment] = useState<DepartmentType | ''>('');
   const [newTaskEstimatedTime, setNewTaskEstimatedTime] = useState('');
   const [newTaskRequired, setNewTaskRequired] = useState(true);
 
   // Filter state
-  const [departmentFilter, setDepartmentFilter] = useState<Department | 'all'>('all');
+  const [departmentFilter, setDepartmentFilter] = useState<DepartmentType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Mock functions for HR management
+  const addTask = (task: OnboardingTask) => {
+    toast({
+      title: "Task Added",
+      description: `Added task: ${task.title}`,
+    });
+  };
+  
+  const removeTask = (taskId: string) => {
+    toast({
+      title: "Task Removed",
+      description: `Removed task ID: ${taskId}`,
+    });
+  };
+  
+  const updateTaskCompletion = (employeeId: string, taskId: string, completed: boolean) => {
+    setEmployees(prevEmployees => 
+      prevEmployees.map(emp => 
+        emp.id === employeeId 
+          ? {
+              ...emp,
+              progress: emp.progress.map(p => 
+                p.taskId === taskId ? {...p, completed} : p
+              )
+            }
+          : emp
+      )
+    );
+  };
   
   // Add new task
   const handleAddTask = () => {
@@ -56,9 +109,11 @@ export default function OnboardingManagement() {
       id: `task-${Date.now()}`,
       title: newTaskTitle,
       description: newTaskDescription,
-      department: newTaskDepartment as Department,
-      estimatedTime: newTaskEstimatedTime,
-      isRequired: newTaskRequired,
+      department: newTaskDepartment as DepartmentType,
+      estimated_time: newTaskEstimatedTime,
+      is_required: newTaskRequired,
+      sequence_order: 0,
+      created_at: new Date().toISOString()
     };
     
     addTask(newTask);
@@ -86,7 +141,7 @@ export default function OnboardingManagement() {
   };
   
   // Calculate completion rates
-  const calculateDepartmentCompletion = (dept: Department) => {
+  const calculateDepartmentCompletion = (dept: DepartmentType) => {
     const deptEmployees = employees.filter(emp => emp.department === dept);
     if (deptEmployees.length === 0) return 0;
     
@@ -116,7 +171,11 @@ export default function OnboardingManagement() {
   );
 
   return (
-    <RoleDashboardLayout>
+    <RoleDashboardLayout 
+      pageTitle="Onboarding Management"
+      roleLabel="HR"
+      dashboardDescription="Manage employee onboarding tasks and progress"
+    >
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Onboarding Management</h1>
         
@@ -147,10 +206,29 @@ export default function OnboardingManagement() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="task-department">Department *</Label>
-                      <DepartmentSelector 
+                      <Select 
                         value={newTaskDepartment}
-                        onValueChange={(value) => setNewTaskDepartment(value as Department)}
-                      />
+                        onValueChange={(value) => setNewTaskDepartment(value as DepartmentType)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="engineering">Engineering</SelectItem>
+                          <SelectItem value="marketing">Marketing</SelectItem>
+                          <SelectItem value="sales">Sales</SelectItem>
+                          <SelectItem value="hr">HR</SelectItem>
+                          <SelectItem value="operations">Operations</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
+                          <SelectItem value="it">IT</SelectItem>
+                          <SelectItem value="warehouse">Warehouse</SelectItem>
+                          <SelectItem value="logistics">Logistics</SelectItem>
+                          <SelectItem value="ehs">EHS</SelectItem>
+                          <SelectItem value="management">Management</SelectItem>
+                          <SelectItem value="planning">Planning</SelectItem>
+                          <SelectItem value="procurement">Procurement</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -199,12 +277,30 @@ export default function OnboardingManagement() {
                 <div className="flex space-x-2">
                   <div className="flex items-center space-x-2">
                     <Filter className="h-4 w-4 text-muted-foreground" />
-                    <DepartmentSelector 
-                      placeholder="Filter by department"
-                      includeAllOption={true}
+                    <Select 
                       value={departmentFilter}
-                      onValueChange={(value) => setDepartmentFilter(value as Department | 'all')}
-                    />
+                      onValueChange={(value) => setDepartmentFilter(value as DepartmentType | 'all')}
+                    >
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Filter by department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Departments</SelectItem>
+                        <SelectItem value="engineering">Engineering</SelectItem>
+                        <SelectItem value="marketing">Marketing</SelectItem>
+                        <SelectItem value="sales">Sales</SelectItem>
+                        <SelectItem value="hr">HR</SelectItem>
+                        <SelectItem value="operations">Operations</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="it">IT</SelectItem>
+                        <SelectItem value="warehouse">Warehouse</SelectItem>
+                        <SelectItem value="logistics">Logistics</SelectItem>
+                        <SelectItem value="ehs">EHS</SelectItem>
+                        <SelectItem value="management">Management</SelectItem>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="procurement">Procurement</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Input
                     placeholder="Search tasks..." 
@@ -244,8 +340,8 @@ export default function OnboardingManagement() {
                           <TableCell>
                             <Badge variant="outline">{task.department}</Badge>
                           </TableCell>
-                          <TableCell>{task.estimatedTime || 'N/A'}</TableCell>
-                          <TableCell>{task.isRequired ? 'Yes' : 'No'}</TableCell>
+                          <TableCell>{task.estimated_time || 'N/A'}</TableCell>
+                          <TableCell>{task.is_required ? 'Yes' : 'No'}</TableCell>
                           <TableCell>
                             <Button variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id)}>
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -267,12 +363,30 @@ export default function OnboardingManagement() {
                   <CardTitle>Employee Onboarding Progress</CardTitle>
                   <CardDescription>Track onboarding progress for all employees</CardDescription>
                 </div>
-                <DepartmentSelector 
-                  placeholder="Filter by department"
-                  includeAllOption={true}
+                <Select
                   value={departmentFilter}
-                  onValueChange={(value) => setDepartmentFilter(value as Department | 'all')}
-                />
+                  onValueChange={(value) => setDepartmentFilter(value as DepartmentType | 'all')}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    <SelectItem value="engineering">Engineering</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="hr">HR</SelectItem>
+                    <SelectItem value="operations">Operations</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="it">IT</SelectItem>
+                    <SelectItem value="warehouse">Warehouse</SelectItem>
+                    <SelectItem value="logistics">Logistics</SelectItem>
+                    <SelectItem value="ehs">EHS</SelectItem>
+                    <SelectItem value="management">Management</SelectItem>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="procurement">Procurement</SelectItem>
+                  </SelectContent>
+                </Select>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[600px]">
@@ -313,22 +427,22 @@ export default function OnboardingManagement() {
                               
                               <div className="space-y-2">
                                 {employeeTasks.map(task => {
-                                  const progress = employee.progress.find(p => p.taskId === task.id);
+                                  const taskProgress = employee.progress.find(p => p.taskId === task.id);
                                   return (
                                     <div key={task.id} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
                                       <div className="flex items-center">
                                         <Checkbox 
-                                          checked={progress?.completed || false}
+                                          checked={taskProgress?.completed || false}
                                           onCheckedChange={(checked) => {
                                             updateTaskCompletion(employee.id, task.id, checked === true);
                                           }}
                                           className="mr-2"
                                         />
-                                        <span className={progress?.completed ? "line-through text-muted-foreground" : ""}>
+                                        <span className={taskProgress?.completed ? "line-through text-muted-foreground" : ""}>
                                           {task.title}
                                         </span>
                                       </div>
-                                      {task.isRequired && (
+                                      {task.is_required && (
                                         <Badge variant="outline">Required</Badge>
                                       )}
                                     </div>
@@ -354,8 +468,8 @@ export default function OnboardingManagement() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {Object.values(Department).map(dept => {
-                    const completionRate = calculateDepartmentCompletion(dept);
+                  {['engineering', 'marketing', 'sales', 'hr', 'operations', 'finance', 'it', 'warehouse', 'logistics', 'ehs', 'management', 'planning', 'procurement'].map(dept => {
+                    const completionRate = calculateDepartmentCompletion(dept as DepartmentType);
                     
                     // Count employees in department
                     const deptEmployeeCount = employees.filter(emp => emp.department === dept).length;

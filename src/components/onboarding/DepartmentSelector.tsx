@@ -1,9 +1,15 @@
 
 import React from 'react';
-import { useOnboarding } from "@/contexts/OnboardingContext";
 import { DepartmentType } from "@/types/onboarding";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+
+interface DepartmentSelectorProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  placeholder?: string;
+  includeAllOption?: boolean;
+}
 
 const departmentOptions: { value: DepartmentType; label: string }[] = [
   { value: 'engineering', label: 'Engineering' },
@@ -21,31 +27,22 @@ const departmentOptions: { value: DepartmentType; label: string }[] = [
   { value: 'procurement', label: 'Procurement' },
 ];
 
-export const DepartmentSelector = () => {
-  const { profile, updateProfile } = useOnboarding();
-  
-  const handleDepartmentChange = (department: DepartmentType) => {
-    updateProfile({ department });
-  };
-
+export const DepartmentSelector = ({ value, onValueChange, placeholder = "Select department", includeAllOption = false }: DepartmentSelectorProps) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="department">Department</Label>
-      <Select
-        value={profile?.department || ""}
-        onValueChange={handleDepartmentChange}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select your department" />
-        </SelectTrigger>
-        <SelectContent>
-          {departmentOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {includeAllOption && (
+          <SelectItem value="all">All Departments</SelectItem>
+        )}
+        {departmentOptions.map(option => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
