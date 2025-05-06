@@ -10,45 +10,92 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types";
 import QRCodeDownload from "@/components/QRCodeDownload";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Login() {
-  const { signIn, demoLogin } = useAuth();
+  const { signIn, signUp, demoLogin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  
+  // Login state
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  
+  // Sign up state
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  
+  // Shared state
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [demoRole, setDemoRole] = useState<UserRole | "">("");
   const [showQRCode, setShowQRCode] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
 
   // Current app URL for QR code
   const appUrl = window.location.origin;
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter your email and password.",
-        variant: "destructive"
-      });
+    if (!loginEmail || !loginPassword) {
+      setError("Please enter your email and password.");
       return;
     }
 
     setLoading(true);
+    setError("");
     try {
-      await signIn(email, password);
+      await signIn(loginEmail, loginPassword);
       toast({
         title: "Success",
         description: "You have successfully logged in.",
       });
       navigate("/");
     } catch (error) {
+      setError("Invalid email or password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!signupEmail || !signupPassword || !confirmPassword || !name) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (signupPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (signupPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      // We'll use technician as a default role for now, the user can change it later
+      await signUp(signupEmail, signupPassword, "technician");
       toast({
-        title: "Error",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive"
+        title: "Account created!",
+        description: "Your account has been successfully created. You can now log in.",
       });
+      setActiveTab("login");
+      setSignupEmail("");
+      setSignupPassword("");
+      setConfirmPassword("");
+      setName("");
+    } catch (error: any) {
+      setError(error.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -56,15 +103,12 @@ export default function Login() {
 
   const handleDemoLogin = async () => {
     if (!demoRole) {
-      toast({
-        title: "Error",
-        description: "Please select a role for demo login.",
-        variant: "destructive"
-      });
+      setError("Please select a role for demo login.");
       return;
     }
 
     setLoading(true);
+    setError("");
     try {
       await demoLogin(demoRole as UserRole);
       toast({
@@ -73,11 +117,7 @@ export default function Login() {
       });
       navigate("/");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to login with demo account. Please try again.",
-        variant: "destructive"
-      });
+      setError("Failed to login with demo account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -87,36 +127,100 @@ export default function Login() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardTitle className="text-2xl">ERP System</CardTitle>
+          <CardDescription>Login or create an account to get started</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignIn}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-            </div>
-          </form>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <TabsContent value="login">
+              <form onSubmit={handleSignIn}>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="m@example.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <form onSubmit={handleSignUp}>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="John Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="m@example.com"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+          </Tabs>
           
           <div className="mt-6">
             <div className="relative">

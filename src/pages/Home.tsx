@@ -9,7 +9,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate('/');
       return;
     }
 
@@ -52,7 +52,7 @@ const Home = () => {
         navigate('/procurement');
         break;
       default:
-        navigate('/login');
+        navigate('/');
         break;
     }
   }, [user, navigate]);
