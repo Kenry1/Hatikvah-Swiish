@@ -1,118 +1,117 @@
 
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { HRSidebar } from '@/components/hr/HRSidebar';
 import { SidebarInset } from '@/components/ui/sidebar';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Profile, 
   OnboardingTask, 
-  UserOnboardingProgress, 
-  DepartmentType 
+  UserOnboardingProgress,
+  DepartmentType
 } from '@/types/onboarding';
 import { 
-  PlusCircle, 
+  Trash2, 
+  Plus, 
+  PenLine, 
+  ClipboardCheck, 
   Users, 
-  ClipboardList, 
-  Search,
-  Edit,
-  RefreshCw,
-  CheckCircle
+  Filter,
+  SortAsc,
+  SortDesc
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { DepartmentSelector } from '@/components/onboarding/DepartmentSelector';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from '@/components/ui/textarea';
 
-interface EmployeeProgressProps {
-  employeeId: string;
-}
+type SortDirection = 'asc' | 'desc';
+type SortField = 'name' | 'department' | 'position' | 'hire_date' | 'progress';
 
-const EmployeeProgress: React.FC<EmployeeProgressProps> = ({ employeeId }) => {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [tasks, setTasks] = useState<OnboardingTask[]>([]);
-  const [progress, setProgress] = useState<UserOnboardingProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+const OnboardingManagement = () => {
   const { toast } = useToast();
-
+  const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState<Profile[]>([]);
+  const [tasks, setTasks] = useState<OnboardingTask[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Profile[]>([]);
+  const [progressMap, setProgressMap] = useState<Record<string, UserOnboardingProgress[]>>({});
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<SortField>('hire_date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // Task dialog states
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<OnboardingTask | null>(null);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [taskDepartment, setTaskDepartment] = useState<DepartmentType | "">("");
+  const [taskEstimatedTime, setTaskEstimatedTime] = useState("");
+  const [taskRequired, setTaskRequired] = useState(true);
+  const [taskOrder, setTaskOrder] = useState(1);
+  
+  // Fetch employees and onboarding data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch profile
-        const { data: profileData, error: profileError } = await supabase
+        // Fetch all employees
+        const { data: employeesData, error: employeesError } = await supabase
           .from('profiles')
-          .select('*')
-          .eq('id', employeeId)
-          .single();
-          
-        if (profileError) throw profileError;
-        setProfile(profileData);
+          .select('*');
         
-        if (profileData.department) {
-          // Fetch tasks
-          const { data: tasksData, error: tasksError } = await supabase
-            .from('onboarding_tasks')
-            .select('*')
-            .eq('department', profileData.department)
-            .order('sequence_order', { ascending: true });
-            
-          if (tasksError) throw tasksError;
-          setTasks(tasksData || []);
-          
-          // Fetch progress
-          const { data: progressData, error: progressError } = await supabase
-            .from('user_onboarding_progress')
-            .select(`
-              *,
-              task:task_id (*)
-            `)
-            .eq('user_id', employeeId);
-            
-          if (progressError) throw progressError;
-          setProgress(progressData || []);
-        }
+        if (employeesError) throw employeesError;
+        
+        // Fetch all tasks
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('onboarding_tasks')
+          .select('*')
+          .order('department', { ascending: true })
+          .order('sequence_order', { ascending: true });
+        
+        if (tasksError) throw tasksError;
+        
+        // Fetch all progress
+        const { data: progressData, error: progressError } = await supabase
+          .from('user_onboarding_progress')
+          .select('*');
+        
+        if (progressError) throw progressError;
+        
+        // Group progress by user
+        const progressByUser: Record<string, UserOnboardingProgress[]> = {};
+        progressData.forEach(progress => {
+          if (!progressByUser[progress.user_id]) {
+            progressByUser[progress.user_id] = [];
+          }
+          progressByUser[progress.user_id].push(progress);
+        });
+        
+        setEmployees(employeesData || []);
+        setFilteredEmployees(employeesData || []);
+        setTasks(tasksData || []);
+        setProgressMap(progressByUser);
       } catch (error) {
-        console.error('Error fetching employee data:', error);
+        console.error('Error fetching onboarding data:', error);
         toast({
           title: "Error",
-          description: "Failed to load employee data.",
-          variant: "destructive"
+          description: "Failed to fetch onboarding data.",
+          variant: "destructive",
         });
       } finally {
         setLoading(false);
@@ -120,635 +119,611 @@ const EmployeeProgress: React.FC<EmployeeProgressProps> = ({ employeeId }) => {
     };
     
     fetchData();
-  }, [employeeId, toast]);
+  }, [toast]);
   
-  const completedTasks = progress.filter(p => p.completed).length;
-  const totalTasks = tasks.length;
-  const completionPercentage = totalTasks > 0 
-    ? Math.round((completedTasks / totalTasks) * 100) 
-    : 0;
+  // Apply filters and search
+  useEffect(() => {
+    let filtered = [...employees];
+    
+    // Apply department filter
+    if (departmentFilter !== "all") {
+      filtered = filtered.filter(
+        employee => employee.department === departmentFilter
+      );
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        employee =>
+          (employee.name && employee.name.toLowerCase().includes(query)) ||
+          (employee.email && employee.email.toLowerCase().includes(query)) ||
+          (employee.position && employee.position.toLowerCase().includes(query))
+      );
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (sortField === 'progress') {
+        const aProgress = calculateProgress(a.id);
+        const bProgress = calculateProgress(b.id);
+        return sortDirection === 'asc' ? aProgress - bProgress : bProgress - aProgress;
+      }
+      
+      // For other fields
+      const aValue = a[sortField] || '';
+      const bValue = b[sortField] || '';
+      
+      if (sortDirection === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+    
+    setFilteredEmployees(filtered);
+  }, [employees, departmentFilter, searchQuery, sortField, sortDirection]);
   
-  return (
-    <div className="space-y-4">
-      {loading ? (
-        <div>Loading employee data...</div>
-      ) : profile ? (
-        <>
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-bold">{profile.name}</h2>
-              <p className="text-muted-foreground">{profile.position} • {profile.email}</p>
-            </div>
-            <Badge variant={completionPercentage === 100 ? "success" : "secondary"}>
-              {completionPercentage}% Complete
-            </Badge>
-          </div>
-          
-          <Progress value={completionPercentage} className="h-2" />
-          
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Task</TableHead>
-                <TableHead>Required</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Completed On</TableHead>
-                <TableHead>Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasks.map(task => {
-                const taskProgress = progress.find(p => p.task_id === task.id);
-                return (
-                  <TableRow key={task.id}>
-                    <TableCell>{task.title}</TableCell>
-                    <TableCell>
-                      {task.is_required ? 
-                        <Badge variant="destructive">Required</Badge> : 
-                        <Badge variant="outline">Optional</Badge>
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {taskProgress?.completed ? 
-                        <Badge variant="success">Completed</Badge> : 
-                        <Badge variant="outline">Pending</Badge>
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {taskProgress?.completed_at ? 
-                        new Date(taskProgress.completed_at).toLocaleDateString() : 
-                        '-'
-                      }
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {taskProgress?.notes || '-'}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </>
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          Employee not found or has no department assigned.
-        </div>
-      )}
-    </div>
-  );
-};
-
-const NewTaskForm = () => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  
-  const [formData, setFormData] = useState<{
-    department: DepartmentType | '';
-    title: string;
-    description: string;
-    estimated_time: string;
-    sequence_order: number;
-    is_required: boolean;
-  }>({
-    department: '',
-    title: '',
-    description: '',
-    estimated_time: '',
-    sequence_order: 1,
-    is_required: true
-  });
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
+  const calculateProgress = (userId: string): number => {
+    const userProgress = progressMap[userId] || [];
+    if (userProgress.length === 0) return 0;
+    
+    const completed = userProgress.filter(p => p.completed).length;
+    return Math.round((completed / userProgress.length) * 100);
   };
   
-  const handleDepartmentChange = (department: DepartmentType) => {
-    setFormData(prev => ({ ...prev, department }));
+  const getProgressColor = (progress: number): string => {
+    if (progress >= 80) return "bg-green-500";
+    if (progress >= 50) return "bg-yellow-500";
+    return "bg-red-500";
   };
   
-  const handleRequiredChange = (required: boolean) => {
-    setFormData(prev => ({ ...prev, is_required: required }));
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
   };
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.department || !formData.title) {
+  const resetTaskDialog = () => {
+    setSelectedTask(null);
+    setTaskTitle("");
+    setTaskDescription("");
+    setTaskDepartment("");
+    setTaskEstimatedTime("");
+    setTaskRequired(true);
+    setTaskOrder(1);
+  };
+  
+  const openAddTaskDialog = () => {
+    resetTaskDialog();
+    setIsTaskDialogOpen(true);
+  };
+  
+  const openEditTaskDialog = (task: OnboardingTask) => {
+    setSelectedTask(task);
+    setTaskTitle(task.title);
+    setTaskDescription(task.description || "");
+    setTaskDepartment(task.department);
+    setTaskEstimatedTime(task.estimated_time || "");
+    setTaskRequired(task.is_required || true);
+    setTaskOrder(task.sequence_order);
+    setIsTaskDialogOpen(true);
+  };
+  
+  const handleSaveTask = async () => {
+    if (!taskTitle || !taskDepartment) {
       toast({
         title: "Error",
-        description: "Department and title are required.",
-        variant: "destructive"
+        description: "Title and department are required.",
+        variant: "destructive",
       });
       return;
     }
     
-    setLoading(true);
-    
     try {
-      const { error } = await supabase
-        .from('onboarding_tasks')
-        .insert({
-          department: formData.department,
-          title: formData.title,
-          description: formData.description,
-          estimated_time: formData.estimated_time,
-          sequence_order: formData.sequence_order,
-          is_required: formData.is_required
+      const taskData = {
+        title: taskTitle,
+        description: taskDescription,
+        department: taskDepartment,
+        estimated_time: taskEstimatedTime,
+        is_required: taskRequired,
+        sequence_order: taskOrder
+      };
+      
+      if (selectedTask) {
+        // Update existing task
+        const { error } = await supabase
+          .from('onboarding_tasks')
+          .update(taskData)
+          .eq('id', selectedTask.id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Task Updated",
+          description: "The onboarding task has been updated.",
+          variant: "secondary",
         });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Task Created",
-        description: "The onboarding task has been created successfully."
-      });
-      
-      // Reset form
-      setFormData({
-        department: '',
-        title: '',
-        description: '',
-        estimated_time: '',
-        sequence_order: 1,
-        is_required: true
-      });
-    } catch (error) {
-      console.error('Error creating task:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create the onboarding task.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="department">Department</Label>
-        <Select
-          value={formData.department}
-          onValueChange={handleDepartmentChange}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="engineering">Engineering</SelectItem>
-            <SelectItem value="marketing">Marketing</SelectItem>
-            <SelectItem value="sales">Sales</SelectItem>
-            <SelectItem value="hr">Human Resources</SelectItem>
-            <SelectItem value="operations">Operations</SelectItem>
-            <SelectItem value="finance">Finance</SelectItem>
-            <SelectItem value="it">IT</SelectItem>
-            <SelectItem value="warehouse">Warehouse</SelectItem>
-            <SelectItem value="logistics">Logistics</SelectItem>
-            <SelectItem value="ehs">EHS</SelectItem>
-            <SelectItem value="management">Management</SelectItem>
-            <SelectItem value="planning">Planning</SelectItem>
-            <SelectItem value="procurement">Procurement</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="title">Task Title</Label>
-        <Input
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          placeholder="Enter task title"
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Enter task description"
-          rows={3}
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="estimated_time">Estimated Time</Label>
-          <Input
-            id="estimated_time"
-            name="estimated_time"
-            value={formData.estimated_time}
-            onChange={handleChange}
-            placeholder="e.g. 30 minutes, 2 hours"
-          />
-        </div>
+      } else {
+        // Create new task
+        const { error } = await supabase
+          .from('onboarding_tasks')
+          .insert([taskData]);
+          
+        if (error) throw error;
         
-        <div className="space-y-2">
-          <Label htmlFor="sequence_order">Sequence Order</Label>
-          <Input
-            id="sequence_order"
-            name="sequence_order"
-            type="number"
-            value={formData.sequence_order}
-            onChange={handleChange}
-            min={1}
-          />
-        </div>
-      </div>
+        toast({
+          title: "Task Created",
+          description: "New onboarding task has been created.",
+          variant: "secondary",
+        });
+      }
       
-      <div className="space-y-2">
-        <Label>Required</Label>
-        <Select
-          value={formData.is_required ? "true" : "false"}
-          onValueChange={(value) => handleRequiredChange(value === "true")}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Is this task required?" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">Yes, required</SelectItem>
-            <SelectItem value="false">No, optional</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <Button type="submit" disabled={loading}>
-        {loading ? "Creating..." : "Create Task"}
-      </Button>
-    </form>
-  );
-};
-
-const OnboardingManagement = () => {
-  const [employees, setEmployees] = useState<Profile[]>([]);
-  const [tasks, setTasks] = useState<OnboardingTask[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentType | 'all'>('all');
-  const { toast } = useToast();
-
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('department', { ascending: true })
-        .order('name', { ascending: true });
-        
-      if (error) throw error;
-      setEmployees(data || []);
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load employees.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTasks = async () => {
-    try {
-      const { data, error } = await supabase
+      // Refresh tasks
+      const { data: tasksData, error: tasksError } = await supabase
         .from('onboarding_tasks')
         .select('*')
         .order('department', { ascending: true })
         .order('sequence_order', { ascending: true });
-        
-      if (error) throw error;
-      setTasks(data || []);
+      
+      if (tasksError) throw tasksError;
+      setTasks(tasksData || []);
+      
+      setIsTaskDialogOpen(false);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('Error saving task:', error);
       toast({
         title: "Error",
-        description: "Failed to load tasks.",
-        variant: "destructive"
+        description: "Failed to save onboarding task.",
+        variant: "destructive",
       });
     }
   };
-
-  useEffect(() => {
-    Promise.all([fetchEmployees(), fetchTasks()]);
-  }, []);
-
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = 
-      (employee.name && employee.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (employee.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (employee.position && employee.position.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-    const matchesDepartment = selectedDepartment === 'all' || employee.department === selectedDepartment;
+  
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
+      return;
+    }
     
-    return matchesSearch && matchesDepartment;
-  });
-
-  const filteredTasks = selectedDepartment === 'all' 
-    ? tasks 
-    : tasks.filter(task => task.department === selectedDepartment);
-
-  const departmentCounts: Record<string, number> = {};
-  employees.forEach(employee => {
-    const dept = employee.department || 'unassigned';
-    departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
-  });
-
+    try {
+      const { error } = await supabase
+        .from('onboarding_tasks')
+        .delete()
+        .eq('id', taskId);
+        
+      if (error) throw error;
+      
+      setTasks(tasks.filter(task => task.id !== taskId));
+      
+      toast({
+        title: "Task Deleted",
+        description: "The onboarding task has been deleted.",
+        variant: "secondary",
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete onboarding task.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Department options for filters and forms
+  const departmentOptions: { value: string, label: string }[] = [
+    { value: "all", label: "All Departments" },
+    { value: "engineering", label: "Engineering" },
+    { value: "marketing", label: "Marketing" },
+    { value: "sales", label: "Sales" },
+    { value: "hr", label: "HR" },
+    { value: "operations", label: "Operations" },
+    { value: "finance", label: "Finance" },
+    { value: "it", label: "IT" },
+    { value: "warehouse", label: "Warehouse" },
+    { value: "logistics", label: "Logistics" },
+    { value: "ehs", label: "EHS" },
+    { value: "management", label: "Management" },
+    { value: "planning", label: "Planning" },
+    { value: "procurement", label: "Procurement" }
+  ];
+  
   return (
     <DashboardLayout sidebar={<HRSidebar />}>
       <SidebarInset>
-        <div className="p-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">Employee Onboarding Management</h1>
-              <p className="text-muted-foreground">
-                Manage employee onboarding processes and tasks
-              </p>
-            </div>
-            <Button onClick={() => {
-              fetchEmployees();
-              fetchTasks();
-            }}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Data
-            </Button>
+        <div className="flex flex-col space-y-6 p-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Employee Onboarding</h1>
+            <p className="text-muted-foreground">
+              Manage onboarding tasks and track employee progress
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Total Employees</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{employees.length}</div>
-                <p className="text-muted-foreground text-sm mt-1">Across all departments</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Onboarding Tasks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{tasks.length}</div>
-                <p className="text-muted-foreground text-sm mt-1">Department-specific tasks</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Departments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {Object.keys(departmentCounts).length}
-                </div>
-                <p className="text-muted-foreground text-sm mt-1">With assigned employees</p>
-              </CardContent>
-            </Card>
-          </div>
-
+          
           <Tabs defaultValue="employees">
-            <TabsList className="w-full md:w-auto grid grid-cols-2 md:inline-flex">
-              <TabsTrigger value="employees">
-                <Users className="mr-2 h-4 w-4" />
-                Employees
-              </TabsTrigger>
-              <TabsTrigger value="tasks">
-                <ClipboardList className="mr-2 h-4 w-4" />
-                Onboarding Tasks
-              </TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="employees">Employees</TabsTrigger>
+              <TabsTrigger value="tasks">Onboarding Tasks</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="employees" className="space-y-4 mt-4">
-              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search employees..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="w-full md:w-60">
-                  <Select
-                    value={selectedDepartment}
-                    onValueChange={(value: DepartmentType | 'all') => setSelectedDepartment(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="engineering">Engineering</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="sales">Sales</SelectItem>
-                      <SelectItem value="hr">Human Resources</SelectItem>
-                      <SelectItem value="operations">Operations</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                      <SelectItem value="it">IT</SelectItem>
-                      <SelectItem value="warehouse">Warehouse</SelectItem>
-                      <SelectItem value="logistics">Logistics</SelectItem>
-                      <SelectItem value="ehs">EHS</SelectItem>
-                      <SelectItem value="management">Management</SelectItem>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="procurement">Procurement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
+            <TabsContent value="employees" className="mt-6">
               <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Hire Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            Loading employees...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredEmployees.length > 0 ? (
-                        filteredEmployees.map(employee => (
-                          <TableRow key={employee.id}>
-                            <TableCell>{employee.name || '-'}</TableCell>
-                            <TableCell>{employee.email}</TableCell>
-                            <TableCell>
-                              {employee.department ? (
-                                <Badge variant="outline" className="capitalize">
-                                  {employee.department}
-                                </Badge>
-                              ) : (
-                                <Badge variant="destructive">Not Assigned</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>{employee.position || '-'}</TableCell>
-                            <TableCell>
-                              {employee.hire_date ? new Date(employee.hire_date).toLocaleDateString() : '-'}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => setSelectedEmployeeId(employee.id)}
-                                  >
-                                    View Progress
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl">
-                                  <DialogHeader>
-                                    <DialogTitle>Onboarding Progress</DialogTitle>
-                                    <DialogDescription>
-                                      View this employee's onboarding progress
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  {selectedEmployeeId && (
-                                    <EmployeeProgress employeeId={selectedEmployeeId} />
-                                  )}
-                                </DialogContent>
-                              </Dialog>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            No employees found
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                <CardHeader className="pb-3">
+                  <CardTitle>Employee Onboarding Progress</CardTitle>
+                  <CardDescription>
+                    Track the onboarding progress of all employees
+                  </CardDescription>
+                  
+                  <div className="flex flex-col md:flex-row gap-4 mt-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Search employees..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    
+                    <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                      <SelectTrigger className="w-full md:w-[200px]">
+                        <SelectValue placeholder="Filter by Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departmentOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex justify-center my-10">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left p-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleSort('name')}
+                                className="flex items-center"
+                              >
+                                Name
+                                {sortField === 'name' && (
+                                  sortDirection === 'asc' ? <SortAsc className="ml-1 h-4 w-4" /> : <SortDesc className="ml-1 h-4 w-4" />
+                                )}
+                              </Button>
+                            </th>
+                            <th className="text-left p-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleSort('department')}
+                                className="flex items-center"
+                              >
+                                Department
+                                {sortField === 'department' && (
+                                  sortDirection === 'asc' ? <SortAsc className="ml-1 h-4 w-4" /> : <SortDesc className="ml-1 h-4 w-4" />
+                                )}
+                              </Button>
+                            </th>
+                            <th className="text-left p-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleSort('position')}
+                                className="flex items-center"
+                              >
+                                Position
+                                {sortField === 'position' && (
+                                  sortDirection === 'asc' ? <SortAsc className="ml-1 h-4 w-4" /> : <SortDesc className="ml-1 h-4 w-4" />
+                                )}
+                              </Button>
+                            </th>
+                            <th className="text-left p-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleSort('hire_date')}
+                                className="flex items-center"
+                              >
+                                Hire Date
+                                {sortField === 'hire_date' && (
+                                  sortDirection === 'asc' ? <SortAsc className="ml-1 h-4 w-4" /> : <SortDesc className="ml-1 h-4 w-4" />
+                                )}
+                              </Button>
+                            </th>
+                            <th className="text-left p-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleSort('progress')}
+                                className="flex items-center"
+                              >
+                                Progress
+                                {sortField === 'progress' && (
+                                  sortDirection === 'asc' ? <SortAsc className="ml-1 h-4 w-4" /> : <SortDesc className="ml-1 h-4 w-4" />
+                                )}
+                              </Button>
+                            </th>
+                            <th className="text-left p-2">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredEmployees.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="text-center py-4">
+                                No employees found
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredEmployees.map(employee => {
+                              const progress = calculateProgress(employee.id);
+                              return (
+                                <tr key={employee.id} className="border-t">
+                                  <td className="p-2">{employee.name || 'N/A'}</td>
+                                  <td className="p-2">
+                                    {employee.department ? (
+                                      <Badge variant="outline">{employee.department}</Badge>
+                                    ) : 'Not set'}
+                                  </td>
+                                  <td className="p-2">{employee.position || 'N/A'}</td>
+                                  <td className="p-2">{employee.hire_date || 'N/A'}</td>
+                                  <td className="p-2">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div 
+                                          className={`h-2.5 rounded-full ${getProgressColor(progress)}`} 
+                                          style={{width: `${progress}%`}}
+                                        ></div>
+                                      </div>
+                                      <span className="text-sm font-medium">{progress}%</span>
+                                    </div>
+                                  </td>
+                                  <td className="p-2">
+                                    {progress >= 100 ? (
+                                      <Badge variant="secondary">Completed</Badge>
+                                    ) : progress > 0 ? (
+                                      <Badge variant="secondary">In Progress</Badge>
+                                    ) : (
+                                      <Badge variant="outline">Not Started</Badge>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
             
-            <TabsContent value="tasks" className="space-y-4 mt-4">
-              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div className="w-full md:w-60">
-                  <Select
-                    value={selectedDepartment}
-                    onValueChange={(value: DepartmentType | 'all') => setSelectedDepartment(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="engineering">Engineering</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="sales">Sales</SelectItem>
-                      <SelectItem value="hr">Human Resources</SelectItem>
-                      <SelectItem value="operations">Operations</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                      <SelectItem value="it">IT</SelectItem>
-                      <SelectItem value="warehouse">Warehouse</SelectItem>
-                      <SelectItem value="logistics">Logistics</SelectItem>
-                      <SelectItem value="ehs">EHS</SelectItem>
-                      <SelectItem value="management">Management</SelectItem>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="procurement">Procurement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add New Task
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create Onboarding Task</DialogTitle>
-                      <DialogDescription>
-                        Add a new onboarding task for a department
-                      </DialogDescription>
-                    </DialogHeader>
-                    <NewTaskForm />
-                  </DialogContent>
-                </Dialog>
-              </div>
-              
+            <TabsContent value="tasks" className="mt-6">
               <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Estimated Time</TableHead>
-                        <TableHead>Sequence</TableHead>
-                        <TableHead>Required</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            Loading tasks...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredTasks.length > 0 ? (
-                        filteredTasks.map(task => (
-                          <TableRow key={task.id}>
-                            <TableCell>
-                              <Badge variant="outline" className="capitalize">
-                                {task.department}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{task.title}</TableCell>
-                            <TableCell className="max-w-xs truncate">{task.description || '-'}</TableCell>
-                            <TableCell>{task.estimated_time || '-'}</TableCell>
-                            <TableCell>{task.sequence_order}</TableCell>
-                            <TableCell>
-                              {task.is_required ? (
-                                <Badge variant="destructive">Required</Badge>
-                              ) : (
-                                <Badge variant="outline">Optional</Badge>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            No tasks found
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Onboarding Tasks</CardTitle>
+                      <CardDescription>
+                        Manage tasks for employee onboarding
+                      </CardDescription>
+                    </div>
+                    <Button onClick={openAddTaskDialog}>
+                      <Plus className="mr-1 h-4 w-4" /> Add Task
+                    </Button>
+                  </div>
+                  
+                  <div className="flex gap-4 mt-4">
+                    <Select 
+                      value={departmentFilter === "all" ? "all" : departmentFilter} 
+                      onValueChange={setDepartmentFilter}
+                    >
+                      <SelectTrigger className="w-full md:w-[200px]">
+                        <SelectValue placeholder="Filter by Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departmentOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex justify-center my-10">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left p-2">#</th>
+                            <th className="text-left p-2">Title</th>
+                            <th className="text-left p-2">Department</th>
+                            <th className="text-left p-2">Est. Time</th>
+                            <th className="text-left p-2">Required</th>
+                            <th className="text-left p-2">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tasks
+                            .filter(task => departmentFilter === "all" || task.department === departmentFilter)
+                            .map((task, index) => (
+                              <tr key={task.id} className="border-t">
+                                <td className="p-2">{task.sequence_order}</td>
+                                <td className="p-2">{task.title}</td>
+                                <td className="p-2">
+                                  <Badge variant="outline">{task.department}</Badge>
+                                </td>
+                                <td className="p-2">{task.estimated_time || 'N/A'}</td>
+                                <td className="p-2">
+                                  {task.is_required ? (
+                                    <Badge variant="secondary">Required</Badge>
+                                  ) : (
+                                    <Badge variant="outline">Optional</Badge>
+                                  )}
+                                </td>
+                                <td className="p-2">
+                                  <div className="flex space-x-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      onClick={() => openEditTaskDialog(task)}
+                                    >
+                                      <PenLine className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => handleDeleteTask(task.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          {tasks.filter(task => departmentFilter === "all" || task.department === departmentFilter).length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="text-center py-4">
+                                No tasks found for this department
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
+          
+          {/* Task Dialog */}
+          <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>{selectedTask ? "Edit Onboarding Task" : "Add Onboarding Task"}</DialogTitle>
+                <DialogDescription>
+                  {selectedTask 
+                    ? "Edit the details of this onboarding task." 
+                    : "Create a new onboarding task for employees."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">
+                    Title
+                  </Label>
+                  <Input
+                    id="title"
+                    value={taskTitle}
+                    onChange={(e) => setTaskTitle(e.target.value)}
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={taskDescription}
+                    onChange={(e) => setTaskDescription(e.target.value)}
+                    className="col-span-3"
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="department" className="text-right">
+                    Department
+                  </Label>
+                  <Select
+                    value={taskDepartment}
+                    onValueChange={(value) => setTaskDepartment(value as DepartmentType)}
+                  >
+                    <SelectTrigger id="department" className="col-span-3">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departmentOptions
+                        .filter(option => option.value !== "all")
+                        .map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="estimatedTime" className="text-right">
+                    Est. Time
+                  </Label>
+                  <Input
+                    id="estimatedTime"
+                    value={taskEstimatedTime}
+                    onChange={(e) => setTaskEstimatedTime(e.target.value)}
+                    className="col-span-3"
+                    placeholder="e.g. 30 minutes, 1 hour"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="order" className="text-right">
+                    Sequence
+                  </Label>
+                  <Input
+                    id="order"
+                    type="number"
+                    value={taskOrder}
+                    onChange={(e) => setTaskOrder(parseInt(e.target.value) || 1)}
+                    min="1"
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="required" className="text-right">
+                    Required
+                  </Label>
+                  <div className="flex items-center space-x-2 col-span-3">
+                    <Switch
+                      id="required"
+                      checked={taskRequired}
+                      onCheckedChange={setTaskRequired}
+                    />
+                    <Label htmlFor="required">Mark as required task</Label>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveTask}>
+                  {selectedTask ? "Save Changes" : "Create Task"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
         </div>
       </SidebarInset>
     </DashboardLayout>
