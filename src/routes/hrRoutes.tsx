@@ -7,6 +7,7 @@ import NewEmployee from '@/pages/hr/NewEmployee';
 import Documents from '@/pages/hr/Documents';
 import EmployeeDocuments from '@/pages/hr/EmployeeDocuments';
 import HRManageAccount from '@/pages/hr/ManageAccount';
+import OnboardingManagement from '@/pages/hr/OnboardingManagement';
 
 export const hrRoutes: RouteObject[] = [
   {
@@ -54,6 +55,14 @@ export const hrRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={['hr']}>
         <HRManageAccount />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/hr/onboarding',
+    element: (
+      <ProtectedRoute allowedRoles={['hr']}>
+        <OnboardingManagement />
       </ProtectedRoute>
     )
   }

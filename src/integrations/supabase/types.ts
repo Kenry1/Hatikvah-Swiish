@@ -9,7 +9,155 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      department_managers: {
+        Row: {
+          created_at: string
+          department: Database["public"]["Enums"]["department_type"]
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department: Database["public"]["Enums"]["department_type"]
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["department_type"]
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_managers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_tasks: {
+        Row: {
+          created_at: string
+          department: Database["public"]["Enums"]["department_type"]
+          description: string | null
+          estimated_time: string | null
+          id: string
+          is_required: boolean | null
+          sequence_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          department: Database["public"]["Enums"]["department_type"]
+          description?: string | null
+          estimated_time?: string | null
+          id?: string
+          is_required?: boolean | null
+          sequence_order: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["department_type"]
+          description?: string | null
+          estimated_time?: string | null
+          id?: string
+          is_required?: boolean | null
+          sequence_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          department: Database["public"]["Enums"]["department_type"] | null
+          email: string
+          hire_date: string | null
+          id: string
+          name: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          department?: Database["public"]["Enums"]["department_type"] | null
+          email: string
+          hire_date?: string | null
+          id: string
+          name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          department?: Database["public"]["Enums"]["department_type"] | null
+          email?: string
+          hire_date?: string | null
+          id?: string
+          name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_onboarding_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_progress_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_onboarding_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +166,20 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      department_type:
+        | "engineering"
+        | "marketing"
+        | "sales"
+        | "hr"
+        | "operations"
+        | "finance"
+        | "it"
+        | "warehouse"
+        | "logistics"
+        | "ehs"
+        | "management"
+        | "planning"
+        | "procurement"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +294,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      department_type: [
+        "engineering",
+        "marketing",
+        "sales",
+        "hr",
+        "operations",
+        "finance",
+        "it",
+        "warehouse",
+        "logistics",
+        "ehs",
+        "management",
+        "planning",
+        "procurement",
+      ],
+    },
   },
 } as const

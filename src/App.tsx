@@ -19,6 +19,7 @@ const AppRoutes = () => {
     ...routes.managementRoutes,
     ...routes.ehsRoutes,
     ...routes.procurementRoutes,
+    ...routes.onboardingRoutes,
   ];
   
   // useRoutes hook doesn't work with the structure we've chosen
@@ -62,6 +63,9 @@ const AppRoutes = () => {
         <Route key={route.path} path={route.path} element={route.element} />
       ))}
       {routes.procurementRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
+      {routes.onboardingRoutes.map((route) => (
         <Route key={route.path} path={route.path} element={route.element} />
       ))}
     </Routes>

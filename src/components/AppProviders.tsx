@@ -8,6 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { EHSProvider } from '@/contexts/EHSContext';
 import { ProcurementProvider } from '@/contexts/ProcurementContext';
+import { OnboardingProvider } from '@/contexts/OnboardingContext';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -22,11 +23,13 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
         <ThemeProvider>
           <EHSProvider>
             <ProcurementProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                {children}
-              </TooltipProvider>
+              <OnboardingProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  {children}
+                </TooltipProvider>
+              </OnboardingProvider>
             </ProcurementProvider>
           </EHSProvider>
         </ThemeProvider>

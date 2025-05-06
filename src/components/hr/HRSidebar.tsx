@@ -11,7 +11,7 @@ import {
   SidebarProvider,
   SidebarTrigger 
 } from "@/components/ui/sidebar";
-import { Users, FolderOpen, Settings, LogOut } from "lucide-react";
+import { Users, FolderOpen, Settings, LogOut, ClipboardList } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const HRSidebar = () => {
@@ -44,6 +44,17 @@ export const HRSidebar = () => {
             >
               <Users size={18} />
               <span>Employees</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              isActive={location.pathname.includes("/hr/onboarding")}
+              onClick={() => navigate("/hr/onboarding")}
+              tooltip="Onboarding"
+            >
+              <ClipboardList size={18} />
+              <span>Onboarding</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           

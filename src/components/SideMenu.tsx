@@ -23,7 +23,8 @@ import {
   Clipboard,
   // Tool was removed as it's not available in lucide-react
   Wrench, // Adding this instead of Tool
-  LogOut
+  LogOut,
+  UserPlus
 } from "lucide-react";
 
 const SideMenu = () => {
@@ -171,6 +172,16 @@ const SideMenu = () => {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton 
+                isActive={location.pathname.includes('/hr/onboarding')}
+                onClick={() => navigate('/hr/onboarding')}
+                tooltip="Onboarding"
+              >
+                <Clipboard size={18} />
+                <span>Onboarding</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
                 isActive={location.pathname.includes('/hr/documents')}
                 onClick={() => navigate('/hr/documents')}
                 tooltip="Documents"
@@ -237,6 +248,17 @@ const SideMenu = () => {
       <SidebarContent>
         <SidebarMenu>
           {renderMenuItems()}
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              isActive={location.pathname === '/onboarding' || location.pathname === '/setup'}
+              onClick={() => navigate('/onboarding')}
+              tooltip="Onboarding"
+            >
+              <UserPlus size={18} />
+              <span>Onboarding</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           
           {user?.role && (
             <SidebarMenuItem>
