@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DepartmentSelector } from "./DepartmentSelector";
+import { DepartmentType } from "@/types/onboarding";
 
 export const ProfileForm = () => {
   const { profile, updateProfile, loading } = useOnboarding();
@@ -12,11 +13,16 @@ export const ProfileForm = () => {
   const [formData, setFormData] = useState({
     name: profile?.name || '',
     position: profile?.position || '',
+    department: profile?.department || '',
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDepartmentChange = (value: string) => {
+    setFormData(prev => ({ ...prev, department: value as DepartmentType }));
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -47,7 +53,14 @@ export const ProfileForm = () => {
         />
       </div>
       
-      <DepartmentSelector />
+      <div className="space-y-2">
+        <Label htmlFor="department">Department</Label>
+        <DepartmentSelector 
+          value={formData.department}
+          onValueChange={handleDepartmentChange}
+          placeholder="Select your department"
+        />
+      </div>
       
       <div className="space-y-2">
         <Label htmlFor="position">Position</Label>
