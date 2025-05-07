@@ -1,37 +1,28 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types";
-import QRCodeDownload from "@/components/QRCodeDownload";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import QRCodeDownload from "@/components/QRCodeDownload";
+import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
+import DemoLoginForm from "@/components/auth/DemoLoginForm";
+import { redirectBasedOnRole } from "@/utils/roleBasedRedirection";
 
 export default function Login() {
   const { signIn, signUp, demoLogin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Login state
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  
-  // Sign up state
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
-  
   // Shared state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [demoRole, setDemoRole] = useState<UserRole | "">("");
   const [showQRCode, setShowQRCode] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
 
@@ -40,60 +31,14 @@ export default function Login() {
 
   // Check if user is already logged in and redirect accordingly
   useEffect(() => {
-    const { user } = useAuth();
-    if (user) {
-      redirectBasedOnRole(user.role);
+    const authContext = useAuth();
+    if (authContext.user) {
+      navigate(redirectBasedOnRole(authContext.user.role));
     }
   }, []);
 
-  // Function to handle redirection based on user role
-  const redirectBasedOnRole = (role: UserRole) => {
-    switch (role) {
-      case 'technician':
-        navigate('/technician');
-        break;
-      case 'warehouse':
-        navigate('/warehouse');
-        break;
-      case 'logistics':
-        navigate('/logistics');
-        break;
-      case 'hr':
-        navigate('/hr');
-        break;
-      case 'implementation_manager':
-        navigate('/implementation-manager');
-        break;
-      case 'project_manager':
-        navigate('/project-manager');
-        break;
-      case 'planning':
-        navigate('/planning');
-        break;
-      case 'it':
-        navigate('/it');
-        break;
-      case 'finance':
-        navigate('/finance');
-        break;
-      case 'management':
-        navigate('/management');
-        break;
-      case 'ehs':
-        navigate('/ehs');
-        break;
-      case 'procurement':
-        navigate('/procurement');
-        break;
-      default:
-        navigate('/');
-        break;
-    }
-  };
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!loginEmail || !loginPassword) {
+  const handleSignIn = async (email: string, password: string) => {
+    if (!email || !password) {
       setError("Please enter your email and password.");
       return;
     }
@@ -101,13 +46,13 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      const userData = await signIn(loginEmail, loginPassword);
+      const userData = await signIn(email, password);
       toast({
         title: "Success",
         description: "You have successfully logged in.",
       });
       if (userData && userData.user) {
-        redirectBasedOnRole(userData.user.role);
+        navigate(redirectBasedOnRole(userData.user.role));
       }
     } catch (error) {
       setError("Invalid email or password. Please try again.");
@@ -116,41 +61,20 @@ export default function Login() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!signupEmail || !signupPassword || !confirmPassword || !name) {
-      setError("Please fill in all fields.");
-      return;
-    }
-
-    if (signupPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (signupPassword.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
-    }
-
+  const handleSignUp = async (name: string, email: string, password: string) => {
     setLoading(true);
     setError("");
     try {
       // We'll use technician as a default role for now, the user can change it later
-      const userData = await signUp(signupEmail, signupPassword, "technician");
+      const userData = await signUp(email, password, "technician");
       toast({
         title: "Account created!",
         description: "Your account has been successfully created. You can now log in.",
       });
       setActiveTab("login");
-      setSignupEmail("");
-      setSignupPassword("");
-      setConfirmPassword("");
-      setName("");
       
       if (userData && userData.user) {
-        redirectBasedOnRole(userData.user.role);
+        navigate(redirectBasedOnRole(userData.user.role));
       }
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
@@ -159,23 +83,18 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    if (!demoRole) {
-      setError("Please select a role for demo login.");
-      return;
-    }
-
+  const handleDemoLogin = async (role: UserRole) => {
     setLoading(true);
     setError("");
     try {
-      const userData = await demoLogin(demoRole as UserRole);
+      const userData = await demoLogin(role);
       toast({
         title: "Demo Login Success",
-        description: `You are now logged in as a ${demoRole}.`,
+        description: `You are now logged in as a ${role}.`,
       });
       
       if (userData && userData.user) {
-        redirectBasedOnRole(userData.user.role);
+        navigate(redirectBasedOnRole(userData.user.role));
       }
     } catch (error) {
       setError("Failed to login with demo account. Please try again.");
@@ -206,80 +125,11 @@ export default function Login() {
             )}
             
             <TabsContent value="login">
-              <form onSubmit={handleSignIn}>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="m@example.com"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign In"}
-                  </Button>
-                </div>
-              </form>
+              <LoginForm onSubmit={handleSignIn} error={error} loading={loading} />
             </TabsContent>
             
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp}>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="John Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="m@example.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </div>
-              </form>
+              <SignUpForm onSubmit={handleSignUp} loading={loading} />
             </TabsContent>
           </Tabs>
           
@@ -296,31 +146,7 @@ export default function Login() {
             </div>
             
             <div className="grid gap-4 mt-4">
-              <div className="grid gap-2">
-                <Label htmlFor="demo-role">Select Role for Demo</Label>
-                <Select value={demoRole} onValueChange={(value) => setDemoRole(value as UserRole)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="technician">Technician</SelectItem>
-                    <SelectItem value="warehouse">Warehouse</SelectItem>
-                    <SelectItem value="logistics">Logistics</SelectItem>
-                    <SelectItem value="hr">HR</SelectItem>
-                    <SelectItem value="implementation_manager">Implementation Manager</SelectItem>
-                    <SelectItem value="project_manager">Project Manager</SelectItem>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="it">IT</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="management">Management</SelectItem>
-                    <SelectItem value="ehs">EHS</SelectItem>
-                    <SelectItem value="procurement">Procurement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="outline" onClick={handleDemoLogin} disabled={loading || !demoRole}>
-                {loading ? "Logging in..." : "Login as Demo User"}
-              </Button>
+              <DemoLoginForm onDemoLogin={handleDemoLogin} loading={loading} />
             </div>
           </div>
           
