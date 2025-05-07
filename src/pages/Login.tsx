@@ -16,7 +16,8 @@ import DemoLoginForm from "@/components/auth/DemoLoginForm";
 import { redirectBasedOnRole } from "@/utils/roleBasedRedirection";
 
 export default function Login() {
-  const { signIn, signUp, demoLogin } = useAuth();
+  const auth = useAuth();
+  const { signIn, signUp, demoLogin, user } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -31,11 +32,10 @@ export default function Login() {
 
   // Check if user is already logged in and redirect accordingly
   useEffect(() => {
-    const authContext = useAuth();
-    if (authContext.user) {
-      navigate(redirectBasedOnRole(authContext.user.role));
+    if (user) {
+      navigate(redirectBasedOnRole(user.role));
     }
-  }, []);
+  }, [user, navigate]);
 
   const handleSignIn = async (email: string, password: string) => {
     if (!email || !password) {
@@ -53,11 +53,7 @@ export default function Login() {
         description: "You have successfully logged in.",
       });
       
-      // Get the updated user after sign-in
-      const authContext = useAuth();
-      if (authContext.user) {
-        navigate(redirectBasedOnRole(authContext.user.role));
-      }
+      // The user state will be updated via the useEffect hook
     } catch (error) {
       setError("Invalid email or password. Please try again.");
     } finally {
@@ -78,11 +74,7 @@ export default function Login() {
       });
       setActiveTab("login");
       
-      // Get the updated user after sign-up
-      const authContext = useAuth();
-      if (authContext.user) {
-        navigate(redirectBasedOnRole(authContext.user.role));
-      }
+      // The user state will be updated via the useEffect hook
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
     } finally {
@@ -101,11 +93,7 @@ export default function Login() {
         description: `You are now logged in as a ${role}.`,
       });
       
-      // Get the updated user after demo login
-      const authContext = useAuth();
-      if (authContext.user) {
-        navigate(redirectBasedOnRole(authContext.user.role));
-      }
+      // The user state will be updated via the useEffect hook
     } catch (error) {
       setError("Failed to login with demo account. Please try again.");
     } finally {

@@ -155,6 +155,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (email === 'ehs@swiish.com') {
         setUser(mockUsers.ehs);
         localStorage.setItem('swiishUser', JSON.stringify(mockUsers.ehs));
+      } else if (email === 'procurement@swiish.com') {
+        setUser(mockUsers.procurement);
+        localStorage.setItem('swiishUser', JSON.stringify(mockUsers.procurement));
       } else {
         throw new Error("Invalid credentials");
       }
@@ -198,7 +201,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     try {
       // Use the mock user for the selected role
-      const demoUser = mockUsers[role];
+      const demoUser = mockUsers[role as keyof typeof mockUsers];
       if (demoUser) {
         setUser(demoUser);
         localStorage.setItem('swiishUser', JSON.stringify(demoUser));
