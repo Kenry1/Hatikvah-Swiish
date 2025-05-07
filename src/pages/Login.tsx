@@ -46,13 +46,17 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      const userData = await signIn(email, password);
+      await signIn(email, password);
+      
       toast({
         title: "Success",
         description: "You have successfully logged in.",
       });
-      if (userData && userData.user) {
-        navigate(redirectBasedOnRole(userData.user.role));
+      
+      // Get the updated user after sign-in
+      const authContext = useAuth();
+      if (authContext.user) {
+        navigate(redirectBasedOnRole(authContext.user.role));
       }
     } catch (error) {
       setError("Invalid email or password. Please try again.");
@@ -66,15 +70,18 @@ export default function Login() {
     setError("");
     try {
       // We'll use technician as a default role for now, the user can change it later
-      const userData = await signUp(email, password, "technician");
+      await signUp(email, password, "technician");
+      
       toast({
         title: "Account created!",
         description: "Your account has been successfully created. You can now log in.",
       });
       setActiveTab("login");
       
-      if (userData && userData.user) {
-        navigate(redirectBasedOnRole(userData.user.role));
+      // Get the updated user after sign-up
+      const authContext = useAuth();
+      if (authContext.user) {
+        navigate(redirectBasedOnRole(authContext.user.role));
       }
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
@@ -87,14 +94,17 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      const userData = await demoLogin(role);
+      await demoLogin(role);
+      
       toast({
         title: "Demo Login Success",
         description: `You are now logged in as a ${role}.`,
       });
       
-      if (userData && userData.user) {
-        navigate(redirectBasedOnRole(userData.user.role));
+      // Get the updated user after demo login
+      const authContext = useAuth();
+      if (authContext.user) {
+        navigate(redirectBasedOnRole(authContext.user.role));
       }
     } catch (error) {
       setError("Failed to login with demo account. Please try again.");
