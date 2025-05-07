@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +38,59 @@ export default function Login() {
   // Current app URL for QR code
   const appUrl = window.location.origin;
 
+  // Check if user is already logged in and redirect accordingly
+  useEffect(() => {
+    const { user } = useAuth();
+    if (user) {
+      redirectBasedOnRole(user.role);
+    }
+  }, []);
+
+  // Function to handle redirection based on user role
+  const redirectBasedOnRole = (role: UserRole) => {
+    switch (role) {
+      case 'technician':
+        navigate('/technician');
+        break;
+      case 'warehouse':
+        navigate('/warehouse');
+        break;
+      case 'logistics':
+        navigate('/logistics');
+        break;
+      case 'hr':
+        navigate('/hr');
+        break;
+      case 'implementation_manager':
+        navigate('/implementation-manager');
+        break;
+      case 'project_manager':
+        navigate('/project-manager');
+        break;
+      case 'planning':
+        navigate('/planning');
+        break;
+      case 'it':
+        navigate('/it');
+        break;
+      case 'finance':
+        navigate('/finance');
+        break;
+      case 'management':
+        navigate('/management');
+        break;
+      case 'ehs':
+        navigate('/ehs');
+        break;
+      case 'procurement':
+        navigate('/procurement');
+        break;
+      default:
+        navigate('/');
+        break;
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) {
@@ -49,12 +101,14 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await signIn(loginEmail, loginPassword);
+      const userData = await signIn(loginEmail, loginPassword);
       toast({
         title: "Success",
         description: "You have successfully logged in.",
       });
-      navigate("/");
+      if (userData && userData.user) {
+        redirectBasedOnRole(userData.user.role);
+      }
     } catch (error) {
       setError("Invalid email or password. Please try again.");
     } finally {
@@ -84,7 +138,7 @@ export default function Login() {
     setError("");
     try {
       // We'll use technician as a default role for now, the user can change it later
-      await signUp(signupEmail, signupPassword, "technician");
+      const userData = await signUp(signupEmail, signupPassword, "technician");
       toast({
         title: "Account created!",
         description: "Your account has been successfully created. You can now log in.",
@@ -94,6 +148,10 @@ export default function Login() {
       setSignupPassword("");
       setConfirmPassword("");
       setName("");
+      
+      if (userData && userData.user) {
+        redirectBasedOnRole(userData.user.role);
+      }
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
     } finally {
@@ -110,12 +168,15 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await demoLogin(demoRole as UserRole);
+      const userData = await demoLogin(demoRole as UserRole);
       toast({
         title: "Demo Login Success",
         description: `You are now logged in as a ${demoRole}.`,
       });
-      navigate("/");
+      
+      if (userData && userData.user) {
+        redirectBasedOnRole(userData.user.role);
+      }
     } catch (error) {
       setError("Failed to login with demo account. Please try again.");
     } finally {
