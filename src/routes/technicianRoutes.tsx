@@ -6,6 +6,7 @@ import FuelRequests from '@/pages/technician/FuelRequests';
 import MaterialRequests from '@/pages/technician/MaterialRequests';
 import Vehicles from '@/pages/technician/Vehicles';
 import SafetyEquipment from '@/pages/technician/SafetyEquipment';
+import TechnicianSettings from '@/pages/technician/TechnicianSettings';
 
 export const technicianRoutes: RouteObject[] = [
   {
@@ -45,6 +46,14 @@ export const technicianRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute allowedRoles={['technician']}>
         <SafetyEquipment />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/technician/settings',
+    element: (
+      <ProtectedRoute allowedRoles={['technician']}>
+        <TechnicianSettings />
       </ProtectedRoute>
     )
   }
