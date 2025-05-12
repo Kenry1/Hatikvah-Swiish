@@ -9,177 +9,327 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      department_managers: {
+      inventory: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          location: string | null
+          minimum_quantity: number
+          name: string
+          quantity: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          minimum_quantity?: number
+          name: string
+          quantity?: number
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          minimum_quantity?: number
+          name?: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
         Row: {
           created_at: string
-          department: Database["public"]["Enums"]["department_type"]
           id: string
+          is_read: boolean
+          message: string
+          related_to: string | null
+          title: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          department: Database["public"]["Enums"]["department_type"]
           id?: string
+          is_read?: boolean
+          message: string
+          related_to?: string | null
+          title: string
           user_id: string
         }
         Update: {
           created_at?: string
-          department?: Database["public"]["Enums"]["department_type"]
           id?: string
+          is_read?: boolean
+          message?: string
+          related_to?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "department_managers_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "notifications_related_to_fkey"
+            columns: ["related_to"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "requests"
             referencedColumns: ["id"]
           },
         ]
-      }
-      onboarding_tasks: {
-        Row: {
-          created_at: string
-          department: Database["public"]["Enums"]["department_type"]
-          description: string | null
-          estimated_time: string | null
-          id: string
-          is_required: boolean | null
-          sequence_order: number
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          department: Database["public"]["Enums"]["department_type"]
-          description?: string | null
-          estimated_time?: string | null
-          id?: string
-          is_required?: boolean | null
-          sequence_order: number
-          title: string
-        }
-        Update: {
-          created_at?: string
-          department?: Database["public"]["Enums"]["department_type"]
-          description?: string | null
-          estimated_time?: string | null
-          id?: string
-          is_required?: boolean | null
-          sequence_order?: number
-          title?: string
-        }
-        Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
-          department: Database["public"]["Enums"]["department_type"] | null
+          department: string | null
           email: string
-          hire_date: string | null
+          first_name: string | null
           id: string
-          name: string | null
-          onboarding_completed: boolean | null
-          onboarding_step: number | null
-          position: string | null
+          last_name: string | null
+          role: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
-          department?: Database["public"]["Enums"]["department_type"] | null
+          department?: string | null
           email: string
-          hire_date?: string | null
+          first_name?: string | null
           id: string
-          name?: string | null
-          onboarding_completed?: boolean | null
-          onboarding_step?: number | null
-          position?: string | null
+          last_name?: string | null
+          role?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
-          department?: Database["public"]["Enums"]["department_type"] | null
+          department?: string | null
           email?: string
-          hire_date?: string | null
+          first_name?: string | null
           id?: string
-          name?: string | null
-          onboarding_completed?: boolean | null
-          onboarding_step?: number | null
-          position?: string | null
+          last_name?: string | null
+          role?: string
           updated_at?: string
         }
         Relationships: []
       }
-      user_onboarding_progress: {
+      request_approvals: {
         Row: {
-          completed: boolean | null
-          completed_at: string | null
+          approver_id: string
+          comments: string | null
           created_at: string
           id: string
-          notes: string | null
-          task_id: string
+          request_id: string
+          status: string
+        }
+        Insert: {
+          approver_id: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          request_id: string
+          status: string
+        }
+        Update: {
+          approver_id?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          request_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_approvals_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          amount: number | null
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          id: string
+          request_type: string
+          status: string
+          submitter_id: string
+          title: string
+          units: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          request_type: string
+          status?: string
+          submitter_id: string
+          title: string
+          units?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          request_type?: string
+          status?: string
+          submitter_id?: string
+          title?: string
+          units?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      role_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metric_name: string
+          metric_value: number
+          role_id: number
+          time_period: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_name: string
+          metric_value: number
+          role_id: number
+          time_period: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_name?: string
+          metric_value?: number
+          role_id?: number
+          time_period?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_metrics_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role_id: number
           user_id: string
         }
         Insert: {
-          completed?: boolean | null
-          completed_at?: string | null
-          created_at?: string
           id?: string
-          notes?: string | null
-          task_id: string
+          role_id: number
           user_id: string
         }
         Update: {
-          completed?: boolean | null
-          completed_at?: string | null
-          created_at?: string
           id?: string
-          notes?: string | null
-          task_id?: string
+          role_id?: number
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_onboarding_progress_task_id_fkey"
-            columns: ["task_id"]
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_tasks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_onboarding_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "roles"
             referencedColumns: ["id"]
           },
         ]
+      }
+      vehicles: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          id: string
+          mileage: number
+          name: string
+          next_service_date: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          mileage?: number
+          name: string
+          next_service_date?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          mileage?: number
+          name?: string
+          next_service_date?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      assign_role_to_user: {
+        Args: { p_user_id: string; p_role_id: number }
+        Returns: undefined
+      }
+      has_role: {
+        Args: { user_id: string; role_name: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      department_type:
-        | "engineering"
-        | "marketing"
-        | "sales"
-        | "hr"
-        | "operations"
-        | "finance"
-        | "it"
-        | "warehouse"
-        | "logistics"
-        | "ehs"
-        | "management"
-        | "planning"
-        | "procurement"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -294,22 +444,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      department_type: [
-        "engineering",
-        "marketing",
-        "sales",
-        "hr",
-        "operations",
-        "finance",
-        "it",
-        "warehouse",
-        "logistics",
-        "ehs",
-        "management",
-        "planning",
-        "procurement",
-      ],
-    },
+    Enums: {},
   },
 } as const
