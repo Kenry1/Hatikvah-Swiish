@@ -88,8 +88,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Fetch onboarding tasks for a department
   const fetchTasks = async (department: DepartmentType) => {
     try {
-      // Use a custom RPC call or direct SQL query to get the tasks
-      // since we're having issues with the TypeScript types for supabase tables
+      // Call the stored function
       const { data, error } = await supabase
         .rpc('get_onboarding_tasks_by_department', { 
           department_param: department 
@@ -106,7 +105,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }
 
       // Convert the data to match OnboardingTask type
-      const tasksData: OnboardingTask[] = data.map((item: any) => ({
+      const tasksData: OnboardingTask[] = Array.isArray(data) ? data.map((item: any) => ({
         id: item.id,
         department: item.department as DepartmentType,
         title: item.title || '',
@@ -115,7 +114,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         sequence_order: item.sequence_order || 0,
         is_required: item.is_required || false,
         created_at: item.created_at
-      }));
+      })) : [];
       
       setTasks(tasksData);
     } catch (error) {
@@ -126,7 +125,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Fetch user's onboarding progress
   const fetchProgress = async (userId: string) => {
     try {
-      // Use a custom RPC call or direct SQL query to get progress
+      // Call the stored function
       const { data, error } = await supabase
         .rpc('get_user_onboarding_progress', { 
           user_id_param: userId 
@@ -143,7 +142,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }
       
       // Convert the data to match UserOnboardingProgress type
-      const progressData: UserOnboardingProgress[] = data.map((item: any) => ({
+      const progressData: UserOnboardingProgress[] = Array.isArray(data) ? data.map((item: any) => ({
         id: item.id,
         user_id: item.user_id,
         task_id: item.task_id,
@@ -161,7 +160,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           is_required: item.task.is_required || false,
           created_at: item.task.created_at
         } : undefined
-      }));
+      })) : [];
       
       setProgress(progressData);
     } catch (error) {
