@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSidebar } from '@/components/ui/sidebar';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 const TopBar = () => {
   const { user, signOut } = useAuth();
@@ -36,8 +35,6 @@ const TopBar = () => {
       </div>
       
       <div className="flex items-center space-x-2">
-        <ThemeToggle />
-        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">

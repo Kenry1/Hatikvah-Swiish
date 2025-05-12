@@ -9,15 +9,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { User, Lock, Bell, Palette, Activity } from 'lucide-react';
+import { User, Lock, Bell, Activity } from 'lucide-react';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Switch } from '@/components/ui/switch';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const TechnicianSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { profile, updateProfile } = useOnboarding();
+  const { theme, setTheme } = useTheme();
   
   const [formData, setFormData] = React.useState({
     name: user?.name || '',
@@ -100,11 +102,27 @@ const TechnicianSettings = () => {
             <h1 className="text-2xl font-bold">Account Settings</h1>
             <p className="text-muted-foreground">Update your account settings and preferences</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 border rounded-md p-2">
-              <Palette className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground mr-2">Theme:</span>
-              <ThemeToggle />
+          <div className="flex items-center gap-2 border rounded-md px-4 py-2">
+            <span className="text-sm text-muted-foreground mr-2">Theme:</span>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setTheme('light')}
+                className={`rounded-md p-2 ${theme === 'light' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-secondary/50'}`}
+              >
+                Light
+              </button>
+              <button
+                onClick={() => setTheme('dark')}
+                className={`rounded-md p-2 ${theme === 'dark' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-secondary/50'}`}
+              >
+                Dark
+              </button>
+              <button
+                onClick={() => setTheme('system')}
+                className={`rounded-md p-2 ${theme === 'system' ? 'bg-secondary text-secondary-foreground' : 'hover:bg-secondary/50'}`}
+              >
+                System
+              </button>
             </div>
           </div>
         </div>

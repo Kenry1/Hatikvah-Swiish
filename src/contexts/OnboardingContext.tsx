@@ -48,7 +48,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         // Convert profile data to match Profile type
         const profileData: Profile = {
           id: data.id,
-          name: data.name || data.first_name || null,
+          // Use first_name + last_name as name if available, otherwise use the name directly if it exists
+          name: data.name || (data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : null),
           email: data.email,
           department: data.department as DepartmentType | null,
           position: data.position || null,
@@ -87,69 +88,84 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Fetch onboarding tasks for a department
   const fetchTasks = async (department: DepartmentType) => {
     try {
+      // Use a custom RPC call or direct SQL query to get the tasks
+      // since we're having issues with the TypeScript types for supabase tables
       const { data, error } = await supabase
-        .from('onboarding_tasks')
-        .select('*')
-        .eq('department', department)
-        .order('sequence_order', { ascending: true });
+        .rpc('get_onboarding_tasks_by_department', { 
+          department_param: department 
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching onboarding tasks:', error);
+        return;
+      }
       
+      if (!data) {
+        console.error('No data returned from onboarding tasks query');
+        return;
+      }
+
       // Convert the data to match OnboardingTask type
-      const tasksData: OnboardingTask[] = data.map(item => ({
+      const tasksData: OnboardingTask[] = data.map((item: any) => ({
         id: item.id,
         department: item.department as DepartmentType,
-        title: item.title,
+        title: item.title || '',
         description: item.description || null,
         estimated_time: item.estimated_time || null,
-        sequence_order: item.sequence_order,
-        is_required: item.is_required,
+        sequence_order: item.sequence_order || 0,
+        is_required: item.is_required || false,
         created_at: item.created_at
       }));
       
       setTasks(tasksData);
     } catch (error) {
-      console.error('Error fetching onboarding tasks:', error);
+      console.error('Error in fetchTasks:', error);
     }
   };
 
   // Fetch user's onboarding progress
   const fetchProgress = async (userId: string) => {
     try {
+      // Use a custom RPC call or direct SQL query to get progress
       const { data, error } = await supabase
-        .from('user_onboarding_progress')
-        .select(`
-          *,
-          task:task_id(*)
-        `)
-        .eq('user_id', userId);
+        .rpc('get_user_onboarding_progress', { 
+          user_id_param: userId 
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching onboarding progress:', error);
+        return;
+      }
+      
+      if (!data) {
+        console.error('No data returned from onboarding progress query');
+        return;
+      }
       
       // Convert the data to match UserOnboardingProgress type
-      const progressData: UserOnboardingProgress[] = data.map(item => ({
+      const progressData: UserOnboardingProgress[] = data.map((item: any) => ({
         id: item.id,
         user_id: item.user_id,
         task_id: item.task_id,
-        completed: item.completed,
+        completed: item.completed || false,
         completed_at: item.completed_at || null,
         notes: item.notes || null,
         created_at: item.created_at,
         task: item.task ? {
           id: item.task.id,
           department: item.task.department as DepartmentType,
-          title: item.task.title,
+          title: item.task.title || '',
           description: item.task.description || null,
           estimated_time: item.task.estimated_time || null,
-          sequence_order: item.task.sequence_order,
-          is_required: item.task.is_required,
+          sequence_order: item.task.sequence_order || 0,
+          is_required: item.task.is_required || false,
           created_at: item.task.created_at
         } : undefined
       }));
       
       setProgress(progressData);
     } catch (error) {
-      console.error('Error fetching onboarding progress:', error);
+      console.error('Error in fetchProgress:', error);
     }
   };
 
@@ -210,30 +226,34 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       const existingProgress = progress.find(p => p.task_id === taskId);
       
       if (existingProgress) {
-        // Update existing progress
+        // Update existing progress via RPC
         const { error } = await supabase
-          .from('user_onboarding_progress')
-          .update({ 
-            completed: true, 
-            completed_at: now,
-            ...(notes !== undefined ? { notes } : {})
-          })
-          .eq('id', existingProgress.id);
-        
-        if (error) throw error;
-      } else {
-        // Create new progress record
-        const { error } = await supabase
-          .from('user_onboarding_progress')
-          .insert({ 
-            user_id: user.id, 
-            task_id: taskId, 
-            completed: true, 
-            completed_at: now,
-            ...(notes !== undefined ? { notes } : {})
+          .rpc('update_onboarding_progress', {
+            progress_id_param: existingProgress.id,
+            completed_param: true,
+            completed_at_param: now,
+            notes_param: notes || null
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating progress:', error);
+          throw error;
+        }
+      } else {
+        // Create new progress record via RPC
+        const { error } = await supabase
+          .rpc('create_onboarding_progress', {
+            user_id_param: user.id,
+            task_id_param: taskId,
+            completed_param: true,
+            completed_at_param: now,
+            notes_param: notes || null
+          });
+        
+        if (error) {
+          console.error('Error creating progress:', error);
+          throw error;
+        }
       }
       
       // Refresh progress
@@ -263,16 +283,19 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       
       if (!existingProgress) return;
       
-      // Update progress record
+      // Update progress record via RPC
       const { error } = await supabase
-        .from('user_onboarding_progress')
-        .update({ 
-          completed: false, 
-          completed_at: null
-        })
-        .eq('id', existingProgress.id);
+        .rpc('update_onboarding_progress', {
+          progress_id_param: existingProgress.id,
+          completed_param: false,
+          completed_at_param: null,
+          notes_param: existingProgress.notes
+        });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating progress:', error);
+        throw error;
+      }
       
       // Refresh progress
       await fetchProgress(user.id);
