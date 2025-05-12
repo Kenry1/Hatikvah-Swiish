@@ -9,11 +9,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { User, Lock, Bell, Palette } from 'lucide-react';
+import { User, Lock, Bell, Palette, Activity } from 'lucide-react';
+import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { Switch } from '@/components/ui/switch';
 
 const TechnicianSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { profile, updateProfile } = useOnboarding();
   
   const [formData, setFormData] = React.useState({
     name: user?.name || '',
@@ -27,14 +31,29 @@ const TechnicianSettings = () => {
     new: '',
     confirm: '',
   });
+
+  const [notifications, setNotifications] = React.useState({
+    email: true,
+    push: true,
+    tasks: true,
+    updates: false,
+  });
   
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been updated successfully."
-    });
+    if (profile) {
+      updateProfile({
+        ...profile,
+        name: formData.name,
+        position: formData.position
+      });
+    } else {
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been updated successfully."
+      });
+    }
   };
   
   const handlePasswordChange = (e: React.FormEvent) => {
@@ -61,6 +80,18 @@ const TechnicianSettings = () => {
     });
   };
 
+  const handleNotificationChange = (key: string, value: boolean) => {
+    setNotifications(prev => ({
+      ...prev,
+      [key]: value
+    }));
+
+    toast({
+      title: "Notification Settings Updated",
+      description: "Your notification preferences have been saved."
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -78,10 +109,31 @@ const TechnicianSettings = () => {
           </div>
         </div>
 
+        {profile && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Onboarding Progress</CardTitle>
+              <CardDescription>
+                Track your onboarding journey
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OnboardingProgress />
+              <div className="mt-4">
+                <Button variant="outline" onClick={() => window.location.href = '/onboarding'} className="w-full">
+                  <Activity className="mr-2 h-4 w-4" />
+                  Go to Onboarding Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full md:w-auto grid-cols-2 mb-4">
+          <TabsList className="grid w-full md:w-auto grid-cols-3 mb-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile">
@@ -184,6 +236,79 @@ const TechnicianSettings = () => {
                   </Button>
                 </CardContent>
               </form>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>Configure how you receive notifications</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive notifications via email
+                      </p>
+                    </div>
+                    <Switch 
+                      id="email-notifications"
+                      checked={notifications.email}
+                      onCheckedChange={(checked) => handleNotificationChange('email', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-notifications">Push Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive notifications on your device
+                      </p>
+                    </div>
+                    <Switch 
+                      id="push-notifications"
+                      checked={notifications.push}
+                      onCheckedChange={(checked) => handleNotificationChange('push', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="task-notifications">Task Assignments</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified about new task assignments
+                      </p>
+                    </div>
+                    <Switch 
+                      id="task-notifications"
+                      checked={notifications.tasks}
+                      onCheckedChange={(checked) => handleNotificationChange('tasks', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="update-notifications">System Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified about system changes and updates
+                      </p>
+                    </div>
+                    <Switch 
+                      id="update-notifications"
+                      checked={notifications.updates}
+                      onCheckedChange={(checked) => handleNotificationChange('updates', checked)}
+                    />
+                  </div>
+                </div>
+
+                <Button>
+                  <Bell className="mr-2 h-4 w-4" />
+                  Save Notification Settings
+                </Button>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>

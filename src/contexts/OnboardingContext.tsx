@@ -44,12 +44,28 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (error) throw error;
-        setProfile(data);
+        
+        // Convert profile data to match Profile type
+        const profileData: Profile = {
+          id: data.id,
+          name: data.name || data.first_name || null,
+          email: data.email,
+          department: data.department as DepartmentType | null,
+          position: data.position || null,
+          hire_date: data.hire_date || null,
+          onboarding_completed: data.onboarding_completed || false,
+          onboarding_step: data.onboarding_step || 0,
+          avatar_url: data.avatar_url || null,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        
+        setProfile(profileData);
         
         // If profile has a department, fetch tasks and progress
-        if (data.department) {
+        if (profileData.department) {
           await Promise.all([
-            fetchTasks(data.department),
+            fetchTasks(profileData.department),
             fetchProgress(user.id)
           ]);
         }
@@ -78,7 +94,20 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         .order('sequence_order', { ascending: true });
 
       if (error) throw error;
-      setTasks(data || []);
+      
+      // Convert the data to match OnboardingTask type
+      const tasksData: OnboardingTask[] = data.map(item => ({
+        id: item.id,
+        department: item.department as DepartmentType,
+        title: item.title,
+        description: item.description || null,
+        estimated_time: item.estimated_time || null,
+        sequence_order: item.sequence_order,
+        is_required: item.is_required,
+        created_at: item.created_at
+      }));
+      
+      setTasks(tasksData);
     } catch (error) {
       console.error('Error fetching onboarding tasks:', error);
     }
@@ -91,12 +120,34 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         .from('user_onboarding_progress')
         .select(`
           *,
-          task:task_id (*)
+          task:task_id(*)
         `)
         .eq('user_id', userId);
 
       if (error) throw error;
-      setProgress(data || []);
+      
+      // Convert the data to match UserOnboardingProgress type
+      const progressData: UserOnboardingProgress[] = data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        task_id: item.task_id,
+        completed: item.completed,
+        completed_at: item.completed_at || null,
+        notes: item.notes || null,
+        created_at: item.created_at,
+        task: item.task ? {
+          id: item.task.id,
+          department: item.task.department as DepartmentType,
+          title: item.task.title,
+          description: item.task.description || null,
+          estimated_time: item.task.estimated_time || null,
+          sequence_order: item.task.sequence_order,
+          is_required: item.task.is_required,
+          created_at: item.task.created_at
+        } : undefined
+      }));
+      
+      setProgress(progressData);
     } catch (error) {
       console.error('Error fetching onboarding progress:', error);
     }
@@ -109,9 +160,16 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       
       setLoading(true);
       
+      // Convert profile data to match the database schema
+      const dbData: any = {
+        ...data,
+        first_name: data.name ? data.name.split(' ')[0] : undefined,
+        last_name: data.name ? data.name.split(' ').slice(1).join(' ') : undefined
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .update(data)
+        .update(dbData)
         .eq('id', user.id);
       
       if (error) throw error;
@@ -158,7 +216,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           .update({ 
             completed: true, 
             completed_at: now,
-            ...(notes && { notes })
+            ...(notes !== undefined ? { notes } : {})
           })
           .eq('id', existingProgress.id);
         
@@ -172,7 +230,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
             task_id: taskId, 
             completed: true, 
             completed_at: now,
-            ...(notes && { notes })
+            ...(notes !== undefined ? { notes } : {})
           });
         
         if (error) throw error;
