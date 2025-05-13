@@ -4,7 +4,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { ProcurementProvider } from '@/contexts/ProcurementContext';
 import { RequestWorkflowProvider } from '@/contexts/RequestWorkflowContext';
-import { ThemeProvider } from '@/components/theme-provider';
+import { EHSProvider } from '@/contexts/EHSContext';
+import { ThemeProvider } from '@/components/ui/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
@@ -16,8 +17,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <OnboardingProvider>
             <ProcurementProvider>
               <RequestWorkflowProvider>
-                {children}
-                <Toaster />
+                <EHSProvider>
+                  {children}
+                  <Toaster />
+                </EHSProvider>
               </RequestWorkflowProvider>
             </ProcurementProvider>
           </OnboardingProvider>
