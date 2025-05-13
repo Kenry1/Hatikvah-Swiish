@@ -97,62 +97,75 @@ export function RequestWorkflowProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchPendingIMRequests = async () => {
-    const { data, error } = await supabase
-      .rpc('get_pending_im_requests');
+    try {
+      const { data, error } = await supabase.functions.invoke('get_pending_im_requests');
     
-    if (error) {
-      console.error('Error fetching IM requests:', error);
-      return;
+      if (error) {
+        console.error('Error fetching IM requests:', error);
+        return;
+      }
+    
+      setPendingIMRequests(data || []);
+    } catch (error) {
+      console.error('Error invoking get_pending_im_requests:', error);
     }
-    
-    setPendingIMRequests(data || []);
   };
 
   const fetchPendingPMRequests = async () => {
-    const { data, error } = await supabase
-      .rpc('get_pending_pm_requests');
+    try {
+      const { data, error } = await supabase.functions.invoke('get_pending_pm_requests');
     
-    if (error) {
-      console.error('Error fetching PM requests:', error);
-      return;
+      if (error) {
+        console.error('Error fetching PM requests:', error);
+        return;
+      }
+    
+      setPendingPMRequests(data || []);
+    } catch (error) {
+      console.error('Error invoking get_pending_pm_requests:', error);
     }
-    
-    setPendingPMRequests(data || []);
   };
 
   const fetchPendingFinanceRequests = async () => {
-    const { data, error } = await supabase
-      .rpc('get_pending_finance_requests');
+    try {
+      const { data, error } = await supabase.functions.invoke('get_pending_finance_requests');
     
-    if (error) {
-      console.error('Error fetching finance requests:', error);
-      return;
+      if (error) {
+        console.error('Error fetching finance requests:', error);
+        return;
+      }
+    
+      setPendingFinanceRequests(data || []);
+    } catch (error) {
+      console.error('Error invoking get_pending_finance_requests:', error);
     }
-    
-    setPendingFinanceRequests(data || []);
   };
 
   const fetchApprovedRequests = async () => {
-    const { data, error } = await supabase
-      .rpc('get_approved_requests_for_logistics');
+    try {
+      const { data, error } = await supabase.functions.invoke('get_approved_requests_for_logistics');
     
-    if (error) {
-      console.error('Error fetching approved requests:', error);
-      return;
+      if (error) {
+        console.error('Error fetching approved requests:', error);
+        return;
+      }
+    
+      setApprovedRequests(data || []);
+    } catch (error) {
+      console.error('Error invoking get_approved_requests_for_logistics:', error);
     }
-    
-    setApprovedRequests(data || []);
   };
 
   const acknowledgeRequest = async (requestId: string) => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .rpc('acknowledge_request', {
+      const { error } = await supabase.functions.invoke('acknowledge_request', {
+        body: {
           p_request_id: requestId,
           p_implementation_manager_id: user.id
-        });
+        }
+      });
 
       if (error) throw error;
 
@@ -179,11 +192,12 @@ export function RequestWorkflowProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .rpc('approve_request_pm', {
+      const { error } = await supabase.functions.invoke('approve_request_pm', {
+        body: {
           p_request_id: requestId,
           p_project_manager_id: user.id
-        });
+        }
+      });
 
       if (error) throw error;
 
@@ -210,11 +224,12 @@ export function RequestWorkflowProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .rpc('approve_request_finance', {
+      const { error } = await supabase.functions.invoke('approve_request_finance', {
+        body: {
           p_request_id: requestId,
           p_finance_manager_id: user.id
-        });
+        }
+      });
 
       if (error) throw error;
 

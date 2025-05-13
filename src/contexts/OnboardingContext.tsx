@@ -48,6 +48,12 @@ interface OnboardingContextType {
     percentage: number;
   };
   refreshOnboarding: () => Promise<void>;
+  // Add these properties to match usage in components
+  tasks: OnboardingTask[];
+  progress: UserOnboardingProgress[];
+  profile: Profile | null;
+  loading: boolean;
+  updateProfile: (updatedProfile: Partial<Profile>) => Promise<void>;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -60,6 +66,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [userProgress, setUserProgress] = useState<UserOnboardingProgress[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [loading, setLoading] = useState(true); // Added for backward compatibility
 
   // Fetch user profile
   useEffect(() => {
@@ -84,6 +91,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const fetchUserProfile = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -98,6 +106,48 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (updatedProfile: Partial<Profile>) => {
+    try {
+      setLoading(true);
+      
+      if (!user) return;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updatedProfile)
+        .eq('id', user.id);
+      
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update profile.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Update local state
+      setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+      
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been updated successfully.',
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,10 +155,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       setLoadingTasks(true);
       
-      // Use a safer approach to call RPC functions
-      const { data, error } = await supabase.functions.invoke('get_onboarding_tasks_by_department', {
-        body: { department: profile?.department }
-      });
+      const { data, error } = await supabase
+        .rpc('get_onboarding_tasks_by_department', {
+          department: profile?.department
+        });
 
       if (error) {
         console.error('Error fetching onboarding tasks:', error);
@@ -132,10 +182,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       setLoadingProgress(true);
       
-      // Use a safer approach to call RPC functions
-      const { data, error } = await supabase.functions.invoke('get_user_onboarding_progress', {
-        body: { userId: user?.id }
-      });
+      const { data, error } = await supabase
+        .rpc('get_user_onboarding_progress', {
+          userId: user?.id
+        });
 
       if (error) {
         console.error('Error fetching user progress:', error);
@@ -172,10 +222,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       }));
       
       for (const entry of progressEntries) {
-        // Use a safer approach to call RPC functions
-        const { error } = await supabase.functions.invoke('create_onboarding_progress', {
-          body: entry
-        });
+        const { error } = await supabase
+          .rpc('create_onboarding_progress', entry);
         
         if (error) {
           console.error('Error creating progress entry:', error);
@@ -198,14 +246,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
       
-      // Use a safer approach to call RPC functions
-      const { error } = await supabase.functions.invoke('update_onboarding_progress', {
-        body: {
+      const { error } = await supabase
+        .rpc('update_onboarding_progress', {
           progressId: progressEntry.id,
           completed: true,
           notes: notes || null
-        }
-      });
+        });
       
       if (error) {
         console.error('Error completing task:', error);
@@ -249,14 +295,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
       
-      // Use a safer approach to call RPC functions
-      const { error } = await supabase.functions.invoke('update_onboarding_progress', {
-        body: {
+      const { error } = await supabase
+        .rpc('update_onboarding_progress', {
           progressId: progressEntry.id,
           completed: false,
           notes: null
-        }
-      });
+        });
       
       if (error) {
         console.error('Error uncompleting task:', error);
@@ -319,7 +363,13 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     completeTask,
     uncompleteTask,
     calculateProgress,
-    refreshOnboarding
+    refreshOnboarding,
+    // Add these mappings for backward compatibility
+    tasks: onboardingTasks,
+    progress: userProgress,
+    profile,
+    loading: loadingTasks || loadingProgress || loading,
+    updateProfile
   };
 
   return (
