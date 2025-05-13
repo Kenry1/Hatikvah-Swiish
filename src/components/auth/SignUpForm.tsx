@@ -5,9 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { UserRole } from "@/types";
 
 interface SignUpFormProps {
-  onSubmit: (name: string, email: string, password: string) => Promise<void>;
+  onSubmit: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   loading: boolean;
 }
 
@@ -16,6 +24,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [role, setRole] = useState<UserRole>("technician");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +47,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
     
     setError("");
     try {
-      await onSubmit(name, email, password);
+      await onSubmit(name, email, password, role);
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
     }
@@ -72,6 +81,28 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="role">Role</Label>
+          <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="technician">Technician</SelectItem>
+              <SelectItem value="warehouse">Warehouse Manager</SelectItem>
+              <SelectItem value="logistics">Logistics Manager</SelectItem>
+              <SelectItem value="hr">HR Manager</SelectItem>
+              <SelectItem value="implementation_manager">Implementation Manager</SelectItem>
+              <SelectItem value="project_manager">Project Manager</SelectItem>
+              <SelectItem value="planning">Planning Manager</SelectItem>
+              <SelectItem value="it">IT Manager</SelectItem>
+              <SelectItem value="finance">Finance Manager</SelectItem>
+              <SelectItem value="management">Management</SelectItem>
+              <SelectItem value="ehs">EHS Manager</SelectItem>
+              <SelectItem value="procurement">Procurement Manager</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="signup-password">Password</Label>

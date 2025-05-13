@@ -19,7 +19,7 @@ export const ITSidebar = () => {
   
   const handleLogout = async () => {
     await signOut();
-    navigate("/login");
+    navigate("/"); // Redirect to login page (root route)
   };
   
   return (

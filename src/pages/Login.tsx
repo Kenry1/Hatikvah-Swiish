@@ -61,12 +61,11 @@ export default function Login() {
     }
   };
 
-  const handleSignUp = async (name: string, email: string, password: string) => {
+  const handleSignUp = async (name: string, email: string, password: string, role: UserRole) => {
     setLoading(true);
     setError("");
     try {
-      // We'll use technician as a default role for now, the user can change it later
-      await signUp(email, password, "technician");
+      await signUp(email, password, role, name);
       
       toast({
         title: "Account created!",

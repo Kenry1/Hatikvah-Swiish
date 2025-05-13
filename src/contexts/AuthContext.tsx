@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: UserRole) => Promise<void>;
+  signUp: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   demoLogin: (role: UserRole) => Promise<void>;
 }
@@ -169,7 +169,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signUp = async (email: string, password: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, role: UserRole, name: string) => {
     setIsLoading(true);
     try {
       // In a real app, this would make a Supabase call
@@ -178,7 +178,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         id: `user-${Date.now()}`,
         email,
         role,
-        name: email.split('@')[0]
+        name
       };
       setUser(newUser);
       localStorage.setItem('swiishUser', JSON.stringify(newUser));
@@ -194,6 +194,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // In a real app, this would make a Supabase call
     localStorage.removeItem('swiishUser');
     setUser(null);
+    // No need to navigate here, components using this function will handle redirection
     return Promise.resolve();
   };
 
