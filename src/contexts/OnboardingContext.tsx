@@ -1,333 +1,325 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, OnboardingTask, UserOnboardingProgress, DepartmentType } from '@/types/onboarding';
+import { useAuth } from './AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+// Types
+export interface OnboardingTask {
+  id: string;
+  title: string;
+  description: string;
+  department: string;
+  required: boolean;
+  order: number;
+}
+
+export interface UserOnboardingProgress {
+  id: string;
+  user_id: string;
+  task_id: string;
+  completed: boolean;
+  completed_at: string | null;
+  notes: string | null;
+}
+
+export interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  role: string;
+  department: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface OnboardingContextType {
-  profile: Profile | null;
-  loading: boolean;
-  tasks: OnboardingTask[];
-  progress: UserOnboardingProgress[];
-  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  onboardingTasks: OnboardingTask[];
+  userProgress: UserOnboardingProgress[];
+  loadingTasks: boolean;
+  loadingProgress: boolean;
   completeTask: (taskId: string, notes?: string) => Promise<void>;
   uncompleteTask: (taskId: string) => Promise<void>;
-  refreshProgress: () => Promise<void>;
+  calculateProgress: () => {
+    completedCount: number;
+    totalCount: number;
+    percentage: number;
+  };
+  refreshOnboarding: () => Promise<void>;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-export function OnboardingProvider({ children }: { children: ReactNode }) {
+export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [tasks, setTasks] = useState<OnboardingTask[]>([]);
-  const [progress, setProgress] = useState<UserOnboardingProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [onboardingTasks, setOnboardingTasks] = useState<OnboardingTask[]>([]);
+  const [userProgress, setUserProgress] = useState<UserOnboardingProgress[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(true);
 
   // Fetch user profile
   useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      setLoading(false);
-      return;
+    if (user) {
+      fetchUserProfile();
     }
+  }, [user]);
 
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+  // Fetch onboarding tasks when department is known
+  useEffect(() => {
+    if (profile?.department) {
+      fetchOnboardingTasks();
+    }
+  }, [profile]);
 
-        if (error) throw error;
-        
-        // Convert profile data to match Profile type
-        const profileData: Profile = {
-          id: data.id,
-          // Use first_name + last_name as name if available, otherwise use the name directly if it exists
-          name: data.name || (data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : null),
-          email: data.email,
-          department: data.department as DepartmentType | null,
-          position: data.position || null,
-          hire_date: data.hire_date || null,
-          onboarding_completed: data.onboarding_completed || false,
-          onboarding_step: data.onboarding_step || 0,
-          avatar_url: data.avatar_url || null,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        };
-        
-        setProfile(profileData);
-        
-        // If profile has a department, fetch tasks and progress
-        if (profileData.department) {
-          await Promise.all([
-            fetchTasks(profileData.department),
-            fetchProgress(user.id)
-          ]);
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load user profile.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch user progress when tasks are loaded
+  useEffect(() => {
+    if (user && onboardingTasks.length > 0) {
+      fetchUserProgress();
+    }
+  }, [user, onboardingTasks]);
 
-    fetchProfile();
-  }, [user, toast]);
-
-  // Fetch onboarding tasks for a department
-  const fetchTasks = async (department: DepartmentType) => {
+  const fetchUserProfile = async () => {
     try {
-      // Call the stored function
       const { data, error } = await supabase
-        .rpc('get_onboarding_tasks_by_department', { 
-          department_param: department 
-        });
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const fetchOnboardingTasks = async () => {
+    try {
+      setLoadingTasks(true);
+      
+      // Use a safer approach to call RPC functions
+      const { data, error } = await supabase.functions.invoke('get_onboarding_tasks_by_department', {
+        body: { department: profile?.department }
+      });
 
       if (error) {
         console.error('Error fetching onboarding tasks:', error);
         return;
       }
-      
-      if (!data) {
-        console.error('No data returned from onboarding tasks query');
-        return;
-      }
 
-      // Convert the data to match OnboardingTask type
-      const tasksData: OnboardingTask[] = Array.isArray(data) ? data.map((item: any) => ({
-        id: item.id,
-        department: item.department as DepartmentType,
-        title: item.title || '',
-        description: item.description || null,
-        estimated_time: item.estimated_time || null,
-        sequence_order: item.sequence_order || 0,
-        is_required: item.is_required || false,
-        created_at: item.created_at
-      })) : [];
-      
-      setTasks(tasksData);
+      setOnboardingTasks(data || []);
     } catch (error) {
-      console.error('Error in fetchTasks:', error);
-    }
-  };
-
-  // Fetch user's onboarding progress
-  const fetchProgress = async (userId: string) => {
-    try {
-      // Call the stored function
-      const { data, error } = await supabase
-        .rpc('get_user_onboarding_progress', { 
-          user_id_param: userId 
-        });
-
-      if (error) {
-        console.error('Error fetching onboarding progress:', error);
-        return;
-      }
-      
-      if (!data) {
-        console.error('No data returned from onboarding progress query');
-        return;
-      }
-      
-      // Convert the data to match UserOnboardingProgress type
-      const progressData: UserOnboardingProgress[] = Array.isArray(data) ? data.map((item: any) => ({
-        id: item.id,
-        user_id: item.user_id,
-        task_id: item.task_id,
-        completed: item.completed || false,
-        completed_at: item.completed_at || null,
-        notes: item.notes || null,
-        created_at: item.created_at,
-        task: item.task ? {
-          id: item.task.id,
-          department: item.task.department as DepartmentType,
-          title: item.task.title || '',
-          description: item.task.description || null,
-          estimated_time: item.task.estimated_time || null,
-          sequence_order: item.task.sequence_order || 0,
-          is_required: item.task.is_required || false,
-          created_at: item.task.created_at
-        } : undefined
-      })) : [];
-      
-      setProgress(progressData);
-    } catch (error) {
-      console.error('Error in fetchProgress:', error);
-    }
-  };
-
-  // Update user profile
-  const updateProfile = async (data: Partial<Profile>) => {
-    try {
-      if (!user) throw new Error('No user logged in');
-      
-      setLoading(true);
-      
-      // Convert profile data to match the database schema
-      const dbData: any = {
-        ...data,
-        first_name: data.name ? data.name.split(' ')[0] : undefined,
-        last_name: data.name ? data.name.split(' ').slice(1).join(' ') : undefined
-      };
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(dbData)
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      // Update local state
-      setProfile(prev => prev ? { ...prev, ...data } : null);
-      
-      // If department was updated, fetch new tasks and progress
-      if (data.department && profile?.department !== data.department) {
-        await fetchTasks(data.department);
-        await fetchProgress(user.id);
-      }
-      
+      console.error('Error fetching onboarding tasks:', error);
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated successfully."
-      });
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to load onboarding tasks.',
+        variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setLoadingTasks(false);
     }
   };
 
-  // Mark a task as complete
-  const completeTask = async (taskId: string, notes?: string) => {
+  const fetchUserProgress = async () => {
     try {
-      if (!user) throw new Error('No user logged in');
+      setLoadingProgress(true);
       
-      const now = new Date().toISOString();
+      // Use a safer approach to call RPC functions
+      const { data, error } = await supabase.functions.invoke('get_user_onboarding_progress', {
+        body: { userId: user?.id }
+      });
+
+      if (error) {
+        console.error('Error fetching user progress:', error);
+        return;
+      }
+
+      setUserProgress(data || []);
+
+      // Check if we need to create progress entries for tasks that don't have them yet
+      const existingTaskIds = data?.map((progress: UserOnboardingProgress) => progress.task_id) || [];
+      const missingTasks = onboardingTasks.filter(task => !existingTaskIds.includes(task.id));
       
-      // Check if progress record exists
-      const existingProgress = progress.find(p => p.task_id === taskId);
+      if (missingTasks.length > 0) {
+        await createInitialProgressEntries(missingTasks);
+      }
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load your onboarding progress.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
+
+  const createInitialProgressEntries = async (tasks: OnboardingTask[]) => {
+    try {
+      const progressEntries = tasks.map(task => ({
+        user_id: user?.id,
+        task_id: task.id,
+        completed: false,
+      }));
       
-      if (existingProgress) {
-        // Update existing progress via RPC
-        const { error } = await supabase
-          .rpc('update_onboarding_progress', {
-            progress_id_param: existingProgress.id,
-            completed_param: true,
-            completed_at_param: now,
-            notes_param: notes || null
-          });
+      for (const entry of progressEntries) {
+        // Use a safer approach to call RPC functions
+        const { error } = await supabase.functions.invoke('create_onboarding_progress', {
+          body: entry
+        });
         
         if (error) {
-          console.error('Error updating progress:', error);
-          throw error;
-        }
-      } else {
-        // Create new progress record via RPC
-        const { error } = await supabase
-          .rpc('create_onboarding_progress', {
-            user_id_param: user.id,
-            task_id_param: taskId,
-            completed_param: true,
-            completed_at_param: now,
-            notes_param: notes || null
-          });
-        
-        if (error) {
-          console.error('Error creating progress:', error);
-          throw error;
+          console.error('Error creating progress entry:', error);
         }
       }
       
-      // Refresh progress
-      await fetchProgress(user.id);
+      // Refresh progress after creating new entries
+      await fetchUserProgress();
+    } catch (error) {
+      console.error('Error creating initial progress entries:', error);
+    }
+  };
+
+  const completeTask = async (taskId: string, notes?: string) => {
+    try {
+      const progressEntry = userProgress.find(p => p.task_id === taskId);
+      
+      if (!progressEntry) {
+        console.error('Progress entry not found for task:', taskId);
+        return;
+      }
+      
+      // Use a safer approach to call RPC functions
+      const { error } = await supabase.functions.invoke('update_onboarding_progress', {
+        body: {
+          progressId: progressEntry.id,
+          completed: true,
+          notes: notes || null
+        }
+      });
+      
+      if (error) {
+        console.error('Error completing task:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to mark task as completed.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Update local state
+      setUserProgress(prev =>
+        prev.map(p =>
+          p.id === progressEntry.id
+            ? { ...p, completed: true, completed_at: new Date().toISOString(), notes: notes || null }
+            : p
+        )
+      );
       
       toast({
-        title: "Task Completed",
-        description: "Your progress has been updated."
+        title: 'Task Completed',
+        description: 'Your progress has been updated.',
       });
     } catch (error) {
       console.error('Error completing task:', error);
       toast({
-        title: "Error",
-        description: "Failed to update task progress.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to mark task as completed.',
+        variant: 'destructive',
       });
     }
   };
 
-  // Mark a task as incomplete
   const uncompleteTask = async (taskId: string) => {
     try {
-      if (!user) throw new Error('No user logged in');
+      const progressEntry = userProgress.find(p => p.task_id === taskId);
       
-      // Find the progress record
-      const existingProgress = progress.find(p => p.task_id === taskId);
-      
-      if (!existingProgress) return;
-      
-      // Update progress record via RPC
-      const { error } = await supabase
-        .rpc('update_onboarding_progress', {
-          progress_id_param: existingProgress.id,
-          completed_param: false,
-          completed_at_param: null,
-          notes_param: existingProgress.notes
-        });
-      
-      if (error) {
-        console.error('Error updating progress:', error);
-        throw error;
+      if (!progressEntry) {
+        console.error('Progress entry not found for task:', taskId);
+        return;
       }
       
-      // Refresh progress
-      await fetchProgress(user.id);
+      // Use a safer approach to call RPC functions
+      const { error } = await supabase.functions.invoke('update_onboarding_progress', {
+        body: {
+          progressId: progressEntry.id,
+          completed: false,
+          notes: null
+        }
+      });
+      
+      if (error) {
+        console.error('Error uncompleting task:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to mark task as not completed.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Update local state
+      setUserProgress(prev =>
+        prev.map(p =>
+          p.id === progressEntry.id
+            ? { ...p, completed: false, completed_at: null, notes: null }
+            : p
+        )
+      );
       
       toast({
-        title: "Task Marked Incomplete",
-        description: "Your progress has been updated."
+        title: 'Task Status Updated',
+        description: 'Task marked as not completed.',
       });
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error('Error uncompleting task:', error);
       toast({
-        title: "Error",
-        description: "Failed to update task progress.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to update task status.',
+        variant: 'destructive',
       });
     }
   };
 
-  // Refresh progress data
-  const refreshProgress = async () => {
-    if (!user) return;
-    await fetchProgress(user.id);
+  const calculateProgress = () => {
+    const requiredTasks = onboardingTasks.filter(task => task.required);
+    const completedRequiredTasks = userProgress.filter(
+      progress => 
+        progress.completed && 
+        requiredTasks.some(task => task.id === progress.task_id)
+    );
+    
+    const totalCount = requiredTasks.length;
+    const completedCount = completedRequiredTasks.length;
+    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+    
+    return { completedCount, totalCount, percentage };
+  };
+
+  const refreshOnboarding = async () => {
+    await fetchOnboardingTasks();
+    await fetchUserProgress();
   };
 
   const value = {
-    profile,
-    loading,
-    tasks,
-    progress,
-    updateProfile,
+    onboardingTasks,
+    userProgress,
+    loadingTasks,
+    loadingProgress,
     completeTask,
     uncompleteTask,
-    refreshProgress
+    calculateProgress,
+    refreshOnboarding
   };
 
   return (
@@ -339,8 +331,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
 export const useOnboarding = () => {
   const context = useContext(OnboardingContext);
+  
   if (context === undefined) {
     throw new Error('useOnboarding must be used within an OnboardingProvider');
   }
+  
   return context;
 };
