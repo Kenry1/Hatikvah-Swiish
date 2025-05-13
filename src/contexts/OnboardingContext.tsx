@@ -28,6 +28,70 @@ interface OnboardingContextType {
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
+// Mock data for development until actual tables are created
+const MOCK_TASKS: OnboardingTask[] = [
+  {
+    id: "task-1",
+    department: "engineering",
+    title: "Complete technical requirements form",
+    description: "Fill out the technical requirements questionnaire for your role",
+    estimated_time: "30 minutes",
+    sequence_order: 1,
+    is_required: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "task-2",
+    department: "engineering",
+    title: "Setup development environment",
+    description: "Install necessary software and tools for development",
+    estimated_time: "2 hours",
+    sequence_order: 2,
+    is_required: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "task-3",
+    department: "engineering",
+    title: "Review team coding standards",
+    description: "Go through the coding standards document",
+    estimated_time: "1 hour",
+    sequence_order: 3,
+    is_required: false,
+    created_at: new Date().toISOString()
+  }
+];
+
+const MOCK_PROGRESS: UserOnboardingProgress[] = [
+  {
+    id: "prog-1",
+    user_id: "user-1",
+    task_id: "task-1",
+    completed: true,
+    completed_at: new Date().toISOString(),
+    notes: "Completed all requirements",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "prog-2",
+    user_id: "user-1",
+    task_id: "task-2",
+    completed: false,
+    completed_at: null,
+    notes: null,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "prog-3",
+    user_id: "user-1",
+    task_id: "task-3",
+    completed: false,
+    completed_at: null,
+    notes: null,
+    created_at: new Date().toISOString()
+  }
+];
+
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -76,7 +140,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Convert database profile to expected Profile type
       const convertedProfile: Profile = {
         id: data.id,
-        name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : null,
         email: data.email,
         department: data.department as DepartmentType | null,
         position: data.position || null,
@@ -86,8 +149,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         avatar_url: data.avatar_url,
         first_name: data.first_name,
         last_name: data.last_name,
+        role: data.role || 'user',
         created_at: data.created_at,
         updated_at: data.updated_at,
+        name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : null,
       };
 
       setProfile(convertedProfile);
@@ -153,33 +218,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       setLoadingTasks(true);
       
-      // Use a direct query instead of RPC
-      const { data, error } = await supabase
-        .from('onboarding_tasks')
-        .select('*')
-        .eq('department', profile?.department)
-        .order('sequence_order', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching onboarding tasks:', error);
-        return;
-      }
-
-      // Normalize the data to match our OnboardingTask type
-      const normalizedTasks: OnboardingTask[] = data ? data.map(task => ({
-        id: task.id,
-        department: task.department as DepartmentType,
-        title: task.title,
-        description: task.description,
-        estimated_time: task.estimated_time,
-        sequence_order: task.sequence_order,
-        is_required: task.is_required,
-        required: task.is_required, // For backward compatibility
-        order: task.sequence_order, // For backward compatibility
-        created_at: task.created_at
-      })) : [];
-
-      setOnboardingTasks(normalizedTasks);
+      // Use mock data for now until the tables are created
+      setTimeout(() => {
+        // Filter tasks by department
+        const filteredTasks = MOCK_TASKS.filter(
+          task => task.department === profile?.department
+        );
+        setOnboardingTasks(filteredTasks);
+        setLoadingTasks(false);
+      }, 500);
     } catch (error) {
       console.error('Error fetching onboarding tasks:', error);
       toast({
@@ -187,7 +234,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         description: 'Failed to load onboarding tasks.',
         variant: 'destructive',
       });
-    } finally {
       setLoadingTasks(false);
     }
   };
@@ -196,47 +242,20 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       setLoadingProgress(true);
       
-      // Use a direct query instead of RPC
-      const { data, error } = await supabase
-        .from('user_onboarding_progress')
-        .select('*, task:task_id(*)') // Join with tasks
-        .eq('user_id', user?.id);
-
-      if (error) {
-        console.error('Error fetching user progress:', error);
-        return;
-      }
-
-      // Normalize the data to match our UserOnboardingProgress type
-      const normalizedProgress: UserOnboardingProgress[] = data ? data.map(progress => ({
-        id: progress.id,
-        user_id: progress.user_id,
-        task_id: progress.task_id,
-        completed: progress.completed,
-        completed_at: progress.completed_at,
-        notes: progress.notes,
-        created_at: progress.created_at,
-        task: progress.task ? {
-          id: progress.task.id,
-          department: progress.task.department as DepartmentType,
-          title: progress.task.title,
-          description: progress.task.description,
-          estimated_time: progress.task.estimated_time,
-          sequence_order: progress.task.sequence_order,
-          is_required: progress.task.is_required,
-          created_at: progress.task.created_at
-        } : undefined
-      })) : [];
-
-      setUserProgress(normalizedProgress);
-
-      // Check if we need to create progress entries for tasks that don't have them yet
-      const existingTaskIds = normalizedProgress.map(progress => progress.task_id);
-      const missingTasks = onboardingTasks.filter(task => !existingTaskIds.includes(task.id));
-      
-      if (missingTasks.length > 0) {
-        await createInitialProgressEntries(missingTasks);
-      }
+      // Use mock data for now until the tables are created
+      setTimeout(() => {
+        // Combine progress with tasks
+        const progressWithTasks = MOCK_PROGRESS.map(progress => {
+          const task = onboardingTasks.find(t => t.id === progress.task_id);
+          return {
+            ...progress,
+            task
+          };
+        });
+        
+        setUserProgress(progressWithTasks);
+        setLoadingProgress(false);
+      }, 500);
     } catch (error) {
       console.error('Error fetching user progress:', error);
       toast({
@@ -244,30 +263,24 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         description: 'Failed to load your onboarding progress.',
         variant: 'destructive',
       });
-    } finally {
       setLoadingProgress(false);
     }
   };
 
   const createInitialProgressEntries = async (tasks: OnboardingTask[]) => {
     try {
-      // Create progress entries one by one
-      for (const task of tasks) {
-        const { error } = await supabase
-          .from('user_onboarding_progress')
-          .insert({
-            user_id: user?.id,
-            task_id: task.id,
-            completed: false
-          });
-        
-        if (error) {
-          console.error('Error creating progress entry:', error);
-        }
-      }
+      // For mock data implementation
+      const newProgressEntries = tasks.map(task => ({
+        id: `prog-${Date.now()}-${task.id}`,
+        user_id: user?.id || '',
+        task_id: task.id,
+        completed: false,
+        completed_at: null,
+        notes: null,
+        created_at: new Date().toISOString()
+      }));
       
-      // Refresh progress after creating new entries
-      await fetchUserProgress();
+      setUserProgress(prev => [...prev, ...newProgressEntries]);
     } catch (error) {
       console.error('Error creating initial progress entries:', error);
     }
@@ -282,34 +295,19 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
       
-      // Update progress entry directly
-      const { error } = await supabase
-        .from('user_onboarding_progress')
-        .update({
-          completed: true,
-          completed_at: new Date().toISOString(),
-          notes: notes || null
-        })
-        .eq('id', progressEntry.id);
-      
-      if (error) {
-        console.error('Error completing task:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to mark task as completed.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Update local state
-      setUserProgress(prev =>
-        prev.map(p =>
-          p.id === progressEntry.id
-            ? { ...p, completed: true, completed_at: new Date().toISOString(), notes: notes || null }
-            : p
-        )
+      // Update mock data for now
+      const updatedProgress = userProgress.map(p => 
+        p.task_id === taskId 
+          ? { 
+              ...p, 
+              completed: true, 
+              completed_at: new Date().toISOString(),
+              notes: notes || null 
+            }
+          : p
       );
+      
+      setUserProgress(updatedProgress);
       
       toast({
         title: 'Task Completed',
@@ -334,34 +332,19 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
       
-      // Update progress entry directly
-      const { error } = await supabase
-        .from('user_onboarding_progress')
-        .update({
-          completed: false,
-          completed_at: null,
-          notes: null
-        })
-        .eq('id', progressEntry.id);
-      
-      if (error) {
-        console.error('Error uncompleting task:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to mark task as not completed.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Update local state
-      setUserProgress(prev =>
-        prev.map(p =>
-          p.id === progressEntry.id
-            ? { ...p, completed: false, completed_at: null, notes: null }
-            : p
-        )
+      // Update mock data for now
+      const updatedProgress = userProgress.map(p => 
+        p.task_id === taskId 
+          ? { 
+              ...p, 
+              completed: false, 
+              completed_at: null,
+              notes: null
+            }
+          : p
       );
+      
+      setUserProgress(updatedProgress);
       
       toast({
         title: 'Task Status Updated',

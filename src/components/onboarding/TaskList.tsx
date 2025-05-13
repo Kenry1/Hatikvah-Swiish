@@ -130,10 +130,8 @@ export const TaskList = () => {
     <div className="space-y-4">
       {tasks
         .sort((a, b) => {
-          // Use sequence_order if available, otherwise fallback to order
-          const aOrder = a.sequence_order !== undefined ? a.sequence_order : (a.order || 0);
-          const bOrder = b.sequence_order !== undefined ? b.sequence_order : (b.order || 0);
-          return aOrder - bOrder;
+          // Use sequence_order if available
+          return a.sequence_order - b.sequence_order;
         })
         .map(task => {
           const taskProgress = progress.find(p => p.task_id === task.id);

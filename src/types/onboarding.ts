@@ -4,18 +4,19 @@ export type DepartmentType = 'engineering' | 'marketing' | 'sales' | 'hr' | 'ope
 
 export interface Profile {
   id: string;
-  name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   email: string;
   department: DepartmentType | null;
-  position: string | null;
-  hire_date: string | null;
-  onboarding_completed: boolean;
-  onboarding_step: number;
+  role: string;
+  position?: string | null;
+  hire_date?: string | null;
+  onboarding_completed?: boolean;
+  onboarding_step?: number;
   avatar_url: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
   created_at: string;
   updated_at: string;
+  name?: string | null; // Computed property
 }
 
 export interface OnboardingTask {

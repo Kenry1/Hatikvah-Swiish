@@ -15,7 +15,7 @@ export const ProfileForm = () => {
     position: string;
     department: DepartmentType | '';
   }>({
-    name: profile?.name || '',
+    name: profile?.name || (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : ''),
     position: profile?.position || '',
     department: profile?.department || '',
   });
