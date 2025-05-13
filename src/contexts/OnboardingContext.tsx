@@ -92,11 +92,12 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // Create a default profile if some fields are missing
+      // Create a default profile with all required fields,
+      // handling potentially missing fields from the database
       const profileData: Profile = {
         id: data.id,
-        first_name: data.first_name,
-        last_name: data.last_name,
+        first_name: data.first_name || null,
+        last_name: data.last_name || null,
         email: data.email,
         department: data.department as DepartmentType | null,
         role: data.role || 'user',
@@ -107,7 +108,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         avatar_url: data.avatar_url,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        name: data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : null,
+        name: data.name || (data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : null),
       };
       
       setProfile(profileData);
