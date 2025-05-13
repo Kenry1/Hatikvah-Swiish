@@ -26,7 +26,19 @@ export const ProfileForm = () => {
   };
 
   const handleDepartmentChange = (value: string) => {
-    setFormData(prev => ({ ...prev, department: value as DepartmentType }));
+    // Only assign if it's a valid DepartmentType
+    if (value === '' || isDepartmentType(value)) {
+      setFormData(prev => ({ ...prev, department: value as DepartmentType | '' }));
+    }
+  };
+  
+  // Helper function to check if a string is a valid DepartmentType
+  const isDepartmentType = (value: string): value is DepartmentType => {
+    return [
+      'engineering', 'marketing', 'sales', 'hr', 
+      'operations', 'finance', 'it', 'warehouse', 
+      'logistics', 'ehs', 'management', 'planning', 'procurement'
+    ].includes(value);
   };
   
   const handleSubmit = (e: React.FormEvent) => {

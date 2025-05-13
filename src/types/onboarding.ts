@@ -12,6 +12,8 @@ export interface Profile {
   onboarding_completed: boolean;
   onboarding_step: number;
   avatar_url: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +26,8 @@ export interface OnboardingTask {
   estimated_time: string | null;
   sequence_order: number;
   is_required: boolean;
+  required?: boolean; // Added for backward compatibility
+  order?: number; // Added for backward compatibility
   created_at: string;
 }
 

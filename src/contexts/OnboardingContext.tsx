@@ -3,37 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
-// Types
-export interface OnboardingTask {
-  id: string;
-  title: string;
-  description: string;
-  department: string;
-  required: boolean;
-  order: number;
-}
-
-export interface UserOnboardingProgress {
-  id: string;
-  user_id: string;
-  task_id: string;
-  completed: boolean;
-  completed_at: string | null;
-  notes: string | null;
-}
-
-export interface Profile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-  role: string;
-  department: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { OnboardingTask, UserOnboardingProgress, Profile, DepartmentType } from '@/types/onboarding';
 
 interface OnboardingContextType {
   onboardingTasks: OnboardingTask[];
@@ -103,7 +73,24 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
 
-      setProfile(data);
+      // Convert database profile to expected Profile type
+      const convertedProfile: Profile = {
+        id: data.id,
+        name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : null,
+        email: data.email,
+        department: data.department as DepartmentType | null,
+        position: data.position || null,
+        hire_date: data.hire_date || null,
+        onboarding_completed: data.onboarding_completed || false,
+        onboarding_step: data.onboarding_step || 0,
+        avatar_url: data.avatar_url,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
+
+      setProfile(convertedProfile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -117,9 +104,20 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       
       if (!user) return;
       
+      // Convert updatedProfile to match database schema
+      const dbProfile: any = { ...updatedProfile };
+      
+      // Handle name special case - split into first_name and last_name
+      if (updatedProfile.name) {
+        const nameParts = updatedProfile.name.split(' ');
+        dbProfile.first_name = nameParts[0];
+        dbProfile.last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
+        delete dbProfile.name; // Remove name as it doesn't exist in DB schema
+      }
+      
       const { error } = await supabase
         .from('profiles')
-        .update(updatedProfile)
+        .update(dbProfile)
         .eq('id', user.id);
       
       if (error) {
@@ -155,17 +153,33 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       setLoadingTasks(true);
       
+      // Use a direct query instead of RPC
       const { data, error } = await supabase
-        .rpc('get_onboarding_tasks_by_department', {
-          department: profile?.department
-        });
+        .from('onboarding_tasks')
+        .select('*')
+        .eq('department', profile?.department)
+        .order('sequence_order', { ascending: true });
 
       if (error) {
         console.error('Error fetching onboarding tasks:', error);
         return;
       }
 
-      setOnboardingTasks(data || []);
+      // Normalize the data to match our OnboardingTask type
+      const normalizedTasks: OnboardingTask[] = data ? data.map(task => ({
+        id: task.id,
+        department: task.department as DepartmentType,
+        title: task.title,
+        description: task.description,
+        estimated_time: task.estimated_time,
+        sequence_order: task.sequence_order,
+        is_required: task.is_required,
+        required: task.is_required, // For backward compatibility
+        order: task.sequence_order, // For backward compatibility
+        created_at: task.created_at
+      })) : [];
+
+      setOnboardingTasks(normalizedTasks);
     } catch (error) {
       console.error('Error fetching onboarding tasks:', error);
       toast({
@@ -182,20 +196,42 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     try {
       setLoadingProgress(true);
       
+      // Use a direct query instead of RPC
       const { data, error } = await supabase
-        .rpc('get_user_onboarding_progress', {
-          userId: user?.id
-        });
+        .from('user_onboarding_progress')
+        .select('*, task:task_id(*)') // Join with tasks
+        .eq('user_id', user?.id);
 
       if (error) {
         console.error('Error fetching user progress:', error);
         return;
       }
 
-      setUserProgress(data || []);
+      // Normalize the data to match our UserOnboardingProgress type
+      const normalizedProgress: UserOnboardingProgress[] = data ? data.map(progress => ({
+        id: progress.id,
+        user_id: progress.user_id,
+        task_id: progress.task_id,
+        completed: progress.completed,
+        completed_at: progress.completed_at,
+        notes: progress.notes,
+        created_at: progress.created_at,
+        task: progress.task ? {
+          id: progress.task.id,
+          department: progress.task.department as DepartmentType,
+          title: progress.task.title,
+          description: progress.task.description,
+          estimated_time: progress.task.estimated_time,
+          sequence_order: progress.task.sequence_order,
+          is_required: progress.task.is_required,
+          created_at: progress.task.created_at
+        } : undefined
+      })) : [];
+
+      setUserProgress(normalizedProgress);
 
       // Check if we need to create progress entries for tasks that don't have them yet
-      const existingTaskIds = data?.map((progress: UserOnboardingProgress) => progress.task_id) || [];
+      const existingTaskIds = normalizedProgress.map(progress => progress.task_id);
       const missingTasks = onboardingTasks.filter(task => !existingTaskIds.includes(task.id));
       
       if (missingTasks.length > 0) {
@@ -215,15 +251,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const createInitialProgressEntries = async (tasks: OnboardingTask[]) => {
     try {
-      const progressEntries = tasks.map(task => ({
-        user_id: user?.id,
-        task_id: task.id,
-        completed: false,
-      }));
-      
-      for (const entry of progressEntries) {
+      // Create progress entries one by one
+      for (const task of tasks) {
         const { error } = await supabase
-          .rpc('create_onboarding_progress', entry);
+          .from('user_onboarding_progress')
+          .insert({
+            user_id: user?.id,
+            task_id: task.id,
+            completed: false
+          });
         
         if (error) {
           console.error('Error creating progress entry:', error);
@@ -246,12 +282,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
       
+      // Update progress entry directly
       const { error } = await supabase
-        .rpc('update_onboarding_progress', {
-          progressId: progressEntry.id,
+        .from('user_onboarding_progress')
+        .update({
           completed: true,
+          completed_at: new Date().toISOString(),
           notes: notes || null
-        });
+        })
+        .eq('id', progressEntry.id);
       
       if (error) {
         console.error('Error completing task:', error);
@@ -295,12 +334,15 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return;
       }
       
+      // Update progress entry directly
       const { error } = await supabase
-        .rpc('update_onboarding_progress', {
-          progressId: progressEntry.id,
+        .from('user_onboarding_progress')
+        .update({
           completed: false,
+          completed_at: null,
           notes: null
-        });
+        })
+        .eq('id', progressEntry.id);
       
       if (error) {
         console.error('Error uncompleting task:', error);
@@ -336,7 +378,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   };
 
   const calculateProgress = () => {
-    const requiredTasks = onboardingTasks.filter(task => task.required);
+    const requiredTasks = onboardingTasks.filter(task => task.is_required);
     const completedRequiredTasks = userProgress.filter(
       progress => 
         progress.completed && 

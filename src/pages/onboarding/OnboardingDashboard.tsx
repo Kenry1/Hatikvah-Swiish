@@ -28,6 +28,10 @@ const OnboardingDashboard = () => {
   const totalTasks = tasks.length;
   const isOnboardingComplete = totalTasks > 0 && completedTasks === totalTasks;
   
+  // Prepare a display name using either name or first_name + last_name
+  const displayName = profile?.name || 
+    (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'New Employee');
+  
   return (
     <DashboardLayout>
       <SidebarInset>
@@ -49,7 +53,7 @@ const OnboardingDashboard = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Welcome, {profile?.name || 'New Employee'}!</CardTitle>
+              <CardTitle>Welcome, {displayName}!</CardTitle>
               <CardDescription>
                 {profile?.department 
                   ? `Complete these tasks to finish your onboarding process` 
