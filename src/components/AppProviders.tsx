@@ -1,40 +1,28 @@
 
-import { ReactNode, useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { ReactNode } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { EHSProvider } from '@/contexts/EHSContext';
-import { ProcurementProvider } from '@/contexts/ProcurementContext';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
+import { ProcurementProvider } from '@/contexts/ProcurementContext';
+import { RequestWorkflowProvider } from '@/contexts/RequestWorkflowContext';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
-interface AppProvidersProps {
-  children: ReactNode;
-}
-
-export const AppProviders = ({ children }: AppProvidersProps) => {
-  // Create a new QueryClient instance inside the component
-  const [queryClient] = useState(() => new QueryClient());
-  
+export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <EHSProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <SidebarProvider>
+        <AuthProvider>
+          <OnboardingProvider>
             <ProcurementProvider>
-              <OnboardingProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  {children}
-                </TooltipProvider>
-              </OnboardingProvider>
+              <RequestWorkflowProvider>
+                {children}
+                <Toaster />
+              </RequestWorkflowProvider>
             </ProcurementProvider>
-          </EHSProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+          </OnboardingProvider>
+        </AuthProvider>
+      </SidebarProvider>
+    </ThemeProvider>
   );
-};
+}
