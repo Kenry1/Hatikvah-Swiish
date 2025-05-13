@@ -180,6 +180,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         delete dbProfile.name; // Remove name as it doesn't exist in DB schema
       }
       
+      // Handle position, hire_date, onboarding_completed, and onboarding_step
+      // which may not exist in the database yet
       const { error } = await supabase
         .from('profiles')
         .update(dbProfile)

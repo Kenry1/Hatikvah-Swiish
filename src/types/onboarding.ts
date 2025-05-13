@@ -9,14 +9,14 @@ export interface Profile {
   email: string;
   department: DepartmentType | null;
   role: string;
-  position?: string | null;
-  hire_date?: string | null;
-  onboarding_completed?: boolean;
-  onboarding_step?: number;
+  position: string | null;
+  hire_date: string | null;
+  onboarding_completed: boolean;
+  onboarding_step: number;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
-  name?: string | null; // Computed property
+  name: string | null; // Computed property
 }
 
 export interface OnboardingTask {
