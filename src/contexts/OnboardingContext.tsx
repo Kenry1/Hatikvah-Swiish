@@ -1,402 +1,317 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { OnboardingTask, UserOnboardingProgress, Profile, DepartmentType } from '@/types/onboarding';
+import { useAuth } from '@/contexts/AuthContext';
+import { Profile, OnboardingTask, UserOnboardingProgress, DepartmentType } from '@/types/onboarding';
+import { toast } from '@/hooks/use-toast';
 
-interface OnboardingContextType {
-  onboardingTasks: OnboardingTask[];
-  userProgress: UserOnboardingProgress[];
-  loadingTasks: boolean;
-  loadingProgress: boolean;
-  completeTask: (taskId: string, notes?: string) => Promise<void>;
-  uncompleteTask: (taskId: string) => Promise<void>;
-  calculateProgress: () => {
-    completedCount: number;
-    totalCount: number;
-    percentage: number;
-  };
-  refreshOnboarding: () => Promise<void>;
-  // Add these properties to match usage in components
-  tasks: OnboardingTask[];
-  progress: UserOnboardingProgress[];
+interface OnboardingContextProps {
   profile: Profile | null;
   loading: boolean;
-  updateProfile: (updatedProfile: Partial<Profile>) => Promise<void>;
+  onboardingTasks: OnboardingTask[];
+  userProgress: UserOnboardingProgress[];
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  fetchUserProfile: () => Promise<void>;
+  updateUserOnboardingStep: (step: number) => Promise<void>;
+  completeUserOnboarding: () => Promise<void>;
+  fetchOnboardingTasks: () => Promise<void>;
+  fetchUserProgress: () => Promise<void>;
+  startTask: (taskId: string) => Promise<void>;
+  completeTask: (taskId: string, notes?: string) => Promise<void>;
 }
 
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
+const OnboardingContext = createContext<OnboardingContextProps | undefined>(undefined);
 
-// Mock data for development until actual tables are created
-const MOCK_TASKS: OnboardingTask[] = [
-  {
-    id: "task-1",
-    department: "engineering",
-    title: "Complete technical requirements form",
-    description: "Fill out the technical requirements questionnaire for your role",
-    estimated_time: "30 minutes",
-    sequence_order: 1,
-    is_required: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "task-2",
-    department: "engineering",
-    title: "Setup development environment",
-    description: "Install necessary software and tools for development",
-    estimated_time: "2 hours",
-    sequence_order: 2,
-    is_required: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "task-3",
-    department: "engineering",
-    title: "Review team coding standards",
-    description: "Go through the coding standards document",
-    estimated_time: "1 hour",
-    sequence_order: 3,
-    is_required: false,
-    created_at: new Date().toISOString()
-  }
-];
-
-const MOCK_PROGRESS: UserOnboardingProgress[] = [
-  {
-    id: "prog-1",
-    user_id: "user-1",
-    task_id: "task-1",
-    completed: true,
-    completed_at: new Date().toISOString(),
-    notes: "Completed all requirements",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "prog-2",
-    user_id: "user-1",
-    task_id: "task-2",
-    completed: false,
-    completed_at: null,
-    notes: null,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "prog-3",
-    user_id: "user-1",
-    task_id: "task-3",
-    completed: false,
-    completed_at: null,
-    notes: null,
-    created_at: new Date().toISOString()
-  }
-];
-
-export function OnboardingProvider({ children }: { children: React.ReactNode }) {
+export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [onboardingTasks, setOnboardingTasks] = useState<OnboardingTask[]>([]);
   const [userProgress, setUserProgress] = useState<UserOnboardingProgress[]>([]);
-  const [loadingTasks, setLoadingTasks] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(true);
-  const [loading, setLoading] = useState(true); // Added for backward compatibility
 
-  // Fetch user profile
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
-  }, [user]);
-
-  // Fetch onboarding tasks when department is known
-  useEffect(() => {
-    if (profile?.department) {
-      fetchOnboardingTasks();
-    }
-  }, [profile]);
-
-  // Fetch user progress when tasks are loaded
-  useEffect(() => {
-    if (user && onboardingTasks.length > 0) {
-      fetchUserProgress();
-    }
-  }, [user, onboardingTasks]);
-
-  const fetchUserProfile = async () => {
+  // Fetch the user profile
+  const fetchUserProfile = useCallback(async () => {
     try {
-      setLoading(true);
+      if (!user) return;
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
-
+      
       if (error) {
         console.error('Error fetching profile:', error);
         return;
       }
-
-      // Convert database profile to expected Profile type
-      const convertedProfile: Profile = {
+      
+      // Make sure we convert the data to match our Profile type
+      const profileData: Profile = {
         id: data.id,
-        email: data.email,
-        department: data.department as DepartmentType | null,
-        position: data.position || null,
-        hire_date: data.hire_date || null,
-        onboarding_completed: data.onboarding_completed || false,
-        onboarding_step: data.onboarding_step || 0,
-        avatar_url: data.avatar_url,
         first_name: data.first_name,
         last_name: data.last_name,
-        role: data.role || 'user',
+        email: data.email,
+        department: data.department as DepartmentType | null,
+        role: data.role,
+        position: data.position || null, // Use null if position doesn't exist
+        hire_date: data.hire_date || null, // Use null if hire_date doesn't exist
+        onboarding_completed: data.onboarding_completed || false, // Default to false
+        onboarding_step: data.onboarding_step || 0, // Default to 0
+        avatar_url: data.avatar_url,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        name: data.first_name ? `${data.first_name} ${data.last_name || ''}`.trim() : null,
+        name: data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : null,
       };
-
-      setProfile(convertedProfile);
+      
+      setProfile(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [user]);
 
-  const updateProfile = async (updatedProfile: Partial<Profile>) => {
+  // Update the user profile
+  const updateProfile = async (data: Partial<Profile>) => {
     try {
+      if (!user || !profile) return;
+
       setLoading(true);
       
-      if (!user) return;
-      
-      // Convert updatedProfile to match database schema
-      const dbProfile: any = { ...updatedProfile };
-      
-      // Handle name special case - split into first_name and last_name
-      if (updatedProfile.name) {
-        const nameParts = updatedProfile.name.split(' ');
-        dbProfile.first_name = nameParts[0];
-        dbProfile.last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
-        delete dbProfile.name; // Remove name as it doesn't exist in DB schema
-      }
-      
-      // Handle position, hire_date, onboarding_completed, and onboarding_step
-      // which may not exist in the database yet
       const { error } = await supabase
         .from('profiles')
-        .update(dbProfile)
+        .update(data)
         .eq('id', user.id);
       
       if (error) {
-        console.error('Error updating profile:', error);
         toast({
-          title: 'Error',
-          description: 'Failed to update profile.',
-          variant: 'destructive',
+          title: "Profile Update Failed",
+          description: error.message,
+          variant: "destructive",
         });
         return;
       }
       
       // Update local state
-      setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+      setProfile({ ...profile, ...data });
       
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been updated successfully.',
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
       });
-    } catch (error) {
-      console.error('Error updating profile:', error);
+    } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to update profile.',
-        variant: 'destructive',
+        title: "Profile Update Failed",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  // Update the user onboarding step
+  const updateUserOnboardingStep = async (step: number) => {
+    if (!user || !profile) return;
+    
+    await updateProfile({ onboarding_step: step });
+  };
+
+  // Complete user onboarding
+  const completeUserOnboarding = async () => {
+    if (!user || !profile) return;
+    
+    await updateProfile({ onboarding_completed: true, onboarding_step: 3 });
+  };
+
+  // Fetch onboarding tasks
   const fetchOnboardingTasks = async () => {
     try {
-      setLoadingTasks(true);
+      if (!user || !profile || !profile.department) return;
       
-      // Use mock data for now until the tables are created
-      setTimeout(() => {
-        // Filter tasks by department
-        const filteredTasks = MOCK_TASKS.filter(
-          task => task.department === profile?.department
-        );
-        setOnboardingTasks(filteredTasks);
-        setLoadingTasks(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error fetching onboarding tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load onboarding tasks.',
-        variant: 'destructive',
-      });
-      setLoadingTasks(false);
-    }
-  };
-
-  const fetchUserProgress = async () => {
-    try {
-      setLoadingProgress(true);
+      const { data, error } = await supabase
+        .from('onboarding_tasks')
+        .select('*')
+        .eq('department', profile.department);
       
-      // Use mock data for now until the tables are created
-      setTimeout(() => {
-        // Combine progress with tasks
-        const progressWithTasks = MOCK_PROGRESS.map(progress => {
-          const task = onboardingTasks.find(t => t.id === progress.task_id);
-          return {
-            ...progress,
-            task
-          };
-        });
-        
-        setUserProgress(progressWithTasks);
-        setLoadingProgress(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error fetching user progress:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load your onboarding progress.',
-        variant: 'destructive',
-      });
-      setLoadingProgress(false);
-    }
-  };
-
-  const createInitialProgressEntries = async (tasks: OnboardingTask[]) => {
-    try {
-      // For mock data implementation
-      const newProgressEntries = tasks.map(task => ({
-        id: `prog-${Date.now()}-${task.id}`,
-        user_id: user?.id || '',
-        task_id: task.id,
-        completed: false,
-        completed_at: null,
-        notes: null,
-        created_at: new Date().toISOString()
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        return;
+      }
+      
+      // Map the data to match our OnboardingTask type
+      const tasks: OnboardingTask[] = data.map(task => ({
+        id: String(task.id),
+        department: task.department as DepartmentType,
+        title: task.title,
+        description: task.description,
+        estimated_time: task.estimated_time,
+        sequence_order: task.sequence_order,
+        is_required: task.is_required,
+        required: task.is_required, // For backward compatibility
+        order: task.sequence_order, // For backward compatibility
+        created_at: task.created_at,
       }));
       
-      setUserProgress(prev => [...prev, ...newProgressEntries]);
+      setOnboardingTasks(tasks);
     } catch (error) {
-      console.error('Error creating initial progress entries:', error);
+      console.error('Error fetching tasks:', error);
     }
   };
 
+  // Fetch user progress
+  const fetchUserProgress = async () => {
+    try {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('user_onboarding_progress')
+        .select('*, task:task_id(*)') // Join with tasks table
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('Error fetching progress:', error);
+        return;
+      }
+      
+      // Map the data to match our UserOnboardingProgress type
+      const progress: UserOnboardingProgress[] = data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        task_id: item.task_id,
+        completed: item.completed,
+        completed_at: item.completed_at,
+        notes: item.notes,
+        created_at: item.created_at,
+        task: item.task ? {
+          id: String(item.task.id),
+          department: item.task.department as DepartmentType,
+          title: item.task.title,
+          description: item.task.description,
+          estimated_time: item.task.estimated_time,
+          sequence_order: item.task.sequence_order,
+          is_required: item.task.is_required,
+          required: item.task.is_required,
+          order: item.task.sequence_order,
+          created_at: item.task.created_at,
+        } : undefined,
+      }));
+      
+      setUserProgress(progress);
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+    }
+  };
+
+  // Start a task
+  const startTask = async (taskId: string) => {
+    try {
+      if (!user) return;
+      
+      // Check if progress already exists
+      const existingProgress = userProgress.find(p => p.task_id === taskId);
+      
+      if (existingProgress) return; // Progress already exists, no need to create
+      
+      const newProgress = {
+        user_id: user.id,
+        task_id: taskId,
+        completed: false,
+        created_at: new Date().toISOString(),
+      };
+      
+      const { data, error } = await supabase
+        .from('user_onboarding_progress')
+        .insert([newProgress])
+        .select('*');
+      
+      if (error) {
+        console.error('Error starting task:', error);
+        return;
+      }
+      
+      // Refresh progress
+      await fetchUserProgress();
+    } catch (error) {
+      console.error('Error starting task:', error);
+    }
+  };
+
+  // Complete a task
   const completeTask = async (taskId: string, notes?: string) => {
     try {
-      const progressEntry = userProgress.find(p => p.task_id === taskId);
+      if (!user) return;
       
-      if (!progressEntry) {
-        console.error('Progress entry not found for task:', taskId);
+      // Check if the progress exists
+      const existingProgress = userProgress.find(p => p.task_id === taskId);
+      
+      if (!existingProgress) {
+        // Create new progress and mark as completed
+        await startTask(taskId);
+      }
+      
+      // Update the progress
+      const { error } = await supabase
+        .from('user_onboarding_progress')
+        .update({
+          completed: true,
+          completed_at: new Date().toISOString(),
+          notes: notes || null,
+        })
+        .eq('user_id', user.id)
+        .eq('task_id', taskId);
+      
+      if (error) {
+        console.error('Error completing task:', error);
         return;
       }
       
-      // Update mock data for now
-      const updatedProgress = userProgress.map(p => 
-        p.task_id === taskId 
-          ? { 
-              ...p, 
-              completed: true, 
-              completed_at: new Date().toISOString(),
-              notes: notes || null 
-            }
-          : p
-      );
+      // Refresh progress
+      await fetchUserProgress();
       
-      setUserProgress(updatedProgress);
-      
+      // Show success toast
       toast({
-        title: 'Task Completed',
-        description: 'Your progress has been updated.',
+        title: "Task Completed",
+        description: "Your task has been marked as completed.",
       });
-    } catch (error) {
-      console.error('Error completing task:', error);
+    } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to mark task as completed.',
-        variant: 'destructive',
+        title: "Task Update Failed",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
       });
     }
   };
 
-  const uncompleteTask = async (taskId: string) => {
-    try {
-      const progressEntry = userProgress.find(p => p.task_id === taskId);
-      
-      if (!progressEntry) {
-        console.error('Progress entry not found for task:', taskId);
-        return;
-      }
-      
-      // Update mock data for now
-      const updatedProgress = userProgress.map(p => 
-        p.task_id === taskId 
-          ? { 
-              ...p, 
-              completed: false, 
-              completed_at: null,
-              notes: null
-            }
-          : p
-      );
-      
-      setUserProgress(updatedProgress);
-      
-      toast({
-        title: 'Task Status Updated',
-        description: 'Task marked as not completed.',
+  // Initial data loading
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      Promise.all([
+        fetchUserProfile(),
+        fetchOnboardingTasks(),
+        fetchUserProgress(),
+      ]).finally(() => {
+        setLoading(false);
       });
-    } catch (error) {
-      console.error('Error uncompleting task:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update task status.',
-        variant: 'destructive',
-      });
+    } else {
+      setProfile(null);
+      setOnboardingTasks([]);
+      setUserProgress([]);
     }
-  };
-
-  const calculateProgress = () => {
-    const requiredTasks = onboardingTasks.filter(task => task.is_required);
-    const completedRequiredTasks = userProgress.filter(
-      progress => 
-        progress.completed && 
-        requiredTasks.some(task => task.id === progress.task_id)
-    );
-    
-    const totalCount = requiredTasks.length;
-    const completedCount = completedRequiredTasks.length;
-    const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-    
-    return { completedCount, totalCount, percentage };
-  };
-
-  const refreshOnboarding = async () => {
-    await fetchOnboardingTasks();
-    await fetchUserProgress();
-  };
+  }, [user, fetchUserProfile]);
 
   const value = {
+    profile,
+    loading,
     onboardingTasks,
     userProgress,
-    loadingTasks,
-    loadingProgress,
+    updateProfile,
+    fetchUserProfile,
+    updateUserOnboardingStep,
+    completeUserOnboarding,
+    fetchOnboardingTasks,
+    fetchUserProgress,
+    startTask,
     completeTask,
-    uncompleteTask,
-    calculateProgress,
-    refreshOnboarding,
-    // Add these mappings for backward compatibility
-    tasks: onboardingTasks,
-    progress: userProgress,
-    profile,
-    loading: loadingTasks || loadingProgress || loading,
-    updateProfile
   };
 
   return (
@@ -406,7 +321,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   );
 }
 
-export const useOnboarding = () => {
+export function useOnboarding() {
   const context = useContext(OnboardingContext);
   
   if (context === undefined) {
@@ -414,4 +329,4 @@ export const useOnboarding = () => {
   }
   
   return context;
-};
+}
