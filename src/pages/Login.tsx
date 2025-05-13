@@ -56,6 +56,7 @@ export default function Login() {
       // The user state will be updated via the useEffect hook
     } catch (error) {
       setError("Invalid email or password. Please try again.");
+      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }

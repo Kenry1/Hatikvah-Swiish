@@ -89,6 +89,22 @@ const mockUsers = {
   }
 };
 
+// Add a registry to store created users
+let createdUsers: Record<string, User> = {};
+
+// Try to load created users from localStorage if available
+const loadCreatedUsers = () => {
+  const savedUsers = localStorage.getItem('swiishCreatedUsers');
+  if (savedUsers) {
+    try {
+      createdUsers = JSON.parse(savedUsers);
+    } catch (error) {
+      console.error("Failed to load created users:", error);
+      createdUsers = {};
+    }
+  }
+};
+
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -100,8 +116,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Effects must be inside the component body
   useEffect(() => {
-    // Check local storage for saved user
+    // Check local storage for saved user and load created users
     const checkForSavedUser = () => {
+      loadCreatedUsers();
+      
       const savedUser = localStorage.getItem('swiishUser');
       if (savedUser) {
         try {
@@ -120,8 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, this would make a Supabase call
-      // For now, mock successful login with a demo user
+      // First check if this is a demo user
       if (email === 'tech@swiish.com') {
         setUser(mockUsers.technician);
         localStorage.setItem('swiishUser', JSON.stringify(mockUsers.technician));
@@ -159,7 +176,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(mockUsers.procurement);
         localStorage.setItem('swiishUser', JSON.stringify(mockUsers.procurement));
       } else {
-        throw new Error("Invalid credentials");
+        // Check if this is a created user
+        loadCreatedUsers(); // Make sure we have the latest
+        
+        if (createdUsers[email]) {
+          // In a real app, we would check the password here
+          // For demo, we'll just check if the user exists
+          setUser(createdUsers[email]);
+          localStorage.setItem('swiishUser', JSON.stringify(createdUsers[email]));
+        } else {
+          throw new Error("Invalid credentials");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -180,6 +207,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         role,
         name
       };
+      
+      // Store the new user in our created users registry
+      loadCreatedUsers();
+      createdUsers[email] = newUser;
+      localStorage.setItem('swiishCreatedUsers', JSON.stringify(createdUsers));
+      
       setUser(newUser);
       localStorage.setItem('swiishUser', JSON.stringify(newUser));
     } catch (error) {

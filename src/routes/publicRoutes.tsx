@@ -9,6 +9,10 @@ export const publicRoutes: RouteObject[] = [
     element: <Login />
   },
   {
+    path: '/login',
+    element: <Login />
+  },
+  {
     path: '*',
     element: <NotFound />
   }
