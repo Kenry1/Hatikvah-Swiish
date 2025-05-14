@@ -88,7 +88,7 @@ const WaitingApproval = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
       {/* Left side - Status card */}
-      <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 p-4 md:p-8 flex items-center justify-center">
+      <div className="w-full md:w-2/3 lg:w-1/2 xl:w-2/5 p-4 md:p-8 flex items-center justify-center">
         <Card className="w-full max-w-md border-none bg-[#1e293b] text-white">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -126,7 +126,7 @@ const WaitingApproval = () => {
       </div>
 
       {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 xl:w-2/3 bg-[#0f172a] relative">
+      <div className="hidden md:flex md:w-1/3 lg:w-1/2 xl:w-3/5 bg-[#0f172a] relative">
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
           <div className="w-full max-w-3xl h-auto">
             <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl">

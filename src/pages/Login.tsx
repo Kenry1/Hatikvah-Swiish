@@ -158,22 +158,20 @@ export default function Login() {
       </div>
 
       {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative">
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-3xl h-auto" style={{ maxHeight: '90vh' }}>
-            <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl h-full">
-              <div className="flex flex-col items-center justify-center h-full p-6 md:p-10 overflow-y-auto">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 md:mb-10 text-center">
-                  African electrical engineer picture
-                </h2>
-                <div className="bg-white rounded-full py-3 px-6 md:py-4 md:px-10 max-w-lg">
-                  <p className="text-black font-medium text-lg md:text-xl">
-                  </p>
-                </div>
-              </div>
-            </AspectRatio>
-          </div>
-        </div>
+      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative rounded-3xl overflow-hidden"> {/* New parent div */}
+ <img
+          src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fst.depositphotos.com%2F7247698%2F56662%2Fi%2F450%2Fdepositphotos_566626298-stock-photo-happy-black-african-women-engineer.jpg&sp=1747210155Tf3d1db4d6081f0e328b64c0828e2ae3643c56ea3eed897efb5bd28a89132f75e"
+          alt="African electrical engineer"
+          className="object-cover w-full h-full rounded-3xl"
+        />
+ <div className="absolute top-0 left-0 right-0 p-4 text-center z-10"> {/* Text div */}
+ <p className="text-white text-lg font-semibold leading-tight">
+ "Any product that needs a manual to work is broken."
+ </p>
+ <p className="text-white text-sm italic mt-1">
+ — Elon Musk
+ </p>
+ </div>
       </div>
     </div>
   );
