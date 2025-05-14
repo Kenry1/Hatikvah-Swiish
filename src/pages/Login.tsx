@@ -12,12 +12,12 @@ import { AlertCircle } from "lucide-react";
 import QRCodeDownload from "@/components/QRCodeDownload";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
-import DemoLoginForm from "@/components/auth/DemoLoginForm";
 import { redirectBasedOnRole } from "@/utils/roleBasedRedirection";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
   const auth = useAuth();
-  const { signIn, signUp, demoLogin, user } = auth;
+  const { signIn, signUp, user } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -33,7 +33,34 @@ export default function Login() {
   // Check if user is already logged in and redirect accordingly
   useEffect(() => {
     if (user) {
-      navigate(redirectBasedOnRole(user.role));
+      // Check if user is approved
+      const checkApprovalStatus = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('approved, approval_pending')
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+          
+          if (data) {
+            if (data.approval_pending) {
+              navigate('/waiting-approval');
+            } else if (data.approved) {
+              navigate(redirectBasedOnRole(user.role));
+            } else {
+              // User was rejected, log them out
+              await auth.signOut();
+              setError("Your account has been rejected. Please contact support.");
+            }
+          }
+        } catch (error) {
+          console.error('Error checking approval status:', error);
+        }
+      };
+
+      checkApprovalStatus();
     }
   }, [user, navigate]);
 
@@ -70,32 +97,12 @@ export default function Login() {
       
       toast({
         title: "Account created!",
-        description: "Your account has been successfully created. You can now log in.",
+        description: "Your account is now pending approval by a department manager.",
       });
-      setActiveTab("login");
-      
-      // The user state will be updated via the useEffect hook
+
+      navigate('/waiting-approval');
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (role: UserRole) => {
-    setLoading(true);
-    setError("");
-    try {
-      await demoLogin(role);
-      
-      toast({
-        title: "Demo Login Success",
-        description: `You are now logged in as a ${role}.`,
-      });
-      
-      // The user state will be updated via the useEffect hook
-    } catch (error) {
-      setError("Failed to login with demo account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -131,23 +138,6 @@ export default function Login() {
             </TabsContent>
           </Tabs>
           
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-muted-foreground/30" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            
-            <div className="grid gap-4 mt-4">
-              <DemoLoginForm onDemoLogin={handleDemoLogin} loading={loading} />
-            </div>
-          </div>
-          
           <div className="mt-6 text-center">
             <Button 
               variant="link" 
@@ -160,15 +150,6 @@ export default function Login() {
             {showQRCode && <QRCodeDownload appUrl={appUrl} />}
           </div>
         </CardContent>
-        <CardFooter>
-          <p className="text-sm text-muted-foreground mt-4">
-            For demo purposes, use these emails: tech@swiish.com, warehouse@swiish.com, 
-            logistics@swiish.com, hr@swiish.com, im@swiish.com, pm@swiish.com, 
-            planning@swiish.com, it@swiish.com, finance@swiish.com, 
-            management@swiish.com, ehs@swiish.com, procurement@swiish.com. 
-            Any password works.
-          </p>
-        </CardFooter>
       </Card>
     </div>
   );

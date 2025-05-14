@@ -2,6 +2,7 @@
 import { RouteObject } from 'react-router-dom';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
+import WaitingApproval from '@/pages/WaitingApproval';
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -11,6 +12,10 @@ export const publicRoutes: RouteObject[] = [
   {
     path: '/login',
     element: <Login />
+  },
+  {
+    path: '/waiting-approval',
+    element: <WaitingApproval />
   },
   {
     path: '*',

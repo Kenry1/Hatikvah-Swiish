@@ -1,102 +1,123 @@
 
-import React from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOnboarding } from '@/contexts/OnboardingContext';
-import DashboardLayout from '@/components/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
-import { TaskList } from '@/components/onboarding/TaskList';
-import { ProfileForm } from '@/components/onboarding/ProfileForm';
-import { CheckCircle2, UserCircle, ListChecks } from 'lucide-react';
-import { SidebarInset } from '@/components/ui/sidebar';
+import DashboardLayout from '@/components/DashboardLayout';
+import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
+import TaskList from '@/components/onboarding/TaskList';
+import { Loader2 } from 'lucide-react';
 
 const OnboardingDashboard = () => {
-  const { profile, tasks, progress } = useOnboarding();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  
-  // Calculate completion percentage
-  const completedTasks = progress.filter(p => p.completed).length;
-  const totalTasks = tasks.length;
-  const isOnboardingComplete = totalTasks > 0 && completedTasks === totalTasks;
-  
-  // Prepare a display name using either name or first_name + last_name
-  const displayName = profile?.name || 
-    (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'New Employee');
-  
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    // Check if user is approved
+    const checkApprovalStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('approved, approval_pending')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        // If approval is still pending, redirect to waiting page
+        if (data && data.approval_pending) {
+          navigate('/waiting-approval');
+        }
+        
+        // If user is rejected, sign them out
+        if (data && !data.approval_pending && !data.approved) {
+          await supabase.auth.signOut();
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error checking approval status:', error);
+      }
+    };
+
+    checkApprovalStatus();
+  }, [user, navigate]);
+
+  const completeOnboarding = async () => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('profiles')
+        .update({
+          onboarding_completed: true,
+          onboarding_step: 100
+        })
+        .eq('id', user.id);
+
+      navigate(`/${user.role}`);
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <SidebarInset>
-        <div className="p-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">Employee Onboarding</h1>
-              <p className="text-muted-foreground">
-                Complete your onboarding tasks and set up your profile
-              </p>
-            </div>
-            {isOnboardingComplete && (
-              <Button onClick={() => navigate('/')}>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Go to Dashboard
-              </Button>
-            )}
-          </div>
-          
+      <div className="container mx-auto p-6 space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Welcome, {user.name}!</h1>
+          <p className="text-muted-foreground mt-2">Complete these steps to setup your account.</p>
+        </div>
+
+        <OnboardingProgress />
+        
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Welcome, {displayName}!</CardTitle>
-              <CardDescription>
-                {profile?.department 
-                  ? `Complete these tasks to finish your onboarding process` 
-                  : 'Please select your department to begin onboarding'}
-              </CardDescription>
+              <CardTitle>Onboarding Tasks</CardTitle>
+              <CardDescription>Complete these tasks to finish your onboarding</CardDescription>
             </CardHeader>
             <CardContent>
-              <OnboardingProgress />
+              <TaskList />
             </CardContent>
           </Card>
           
-          <Tabs defaultValue="tasks">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="tasks">
-                <ListChecks className="mr-2 h-4 w-4" />
-                Onboarding Tasks
-              </TabsTrigger>
-              <TabsTrigger value="profile">
-                <UserCircle className="mr-2 h-4 w-4" />
-                Profile
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="tasks" className="mt-4">
-              <TaskList />
-            </TabsContent>
-            
-            <TabsContent value="profile" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Profile</CardTitle>
-                  <CardDescription>
-                    Update your personal information and department
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ProfileForm />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Profile</CardTitle>
+              <CardDescription>Complete your profile information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Make sure to complete your profile information to help your team members identify you.
+              </p>
+              <Button onClick={() => navigate('/setup')}>
+                Update Profile
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </SidebarInset>
+        
+        <div className="flex justify-end">
+          <Button onClick={completeOnboarding}>
+            Complete Onboarding
+          </Button>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      department_managers: {
+        Row: {
+          created_at: string | null
+          department: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          department: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           category: string
@@ -83,37 +104,88 @@ export type Database = {
           },
         ]
       }
+      onboarding_tasks: {
+        Row: {
+          created_at: string | null
+          department: string
+          description: string | null
+          estimated_time: string | null
+          id: string
+          is_required: boolean | null
+          sequence_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          department: string
+          description?: string | null
+          estimated_time?: string | null
+          id?: string
+          is_required?: boolean | null
+          sequence_order: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          description?: string | null
+          estimated_time?: string | null
+          id?: string
+          is_required?: boolean | null
+          sequence_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          approval_pending: boolean | null
+          approved: boolean | null
           avatar_url: string | null
           created_at: string
           department: string | null
           email: string
           first_name: string | null
+          hire_date: string | null
           id: string
           last_name: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          position: string | null
           role: string
           updated_at: string
         }
         Insert: {
+          approval_pending?: boolean | null
+          approved?: boolean | null
           avatar_url?: string | null
           created_at?: string
           department?: string | null
           email: string
           first_name?: string | null
+          hire_date?: string | null
           id: string
           last_name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          position?: string | null
           role?: string
           updated_at?: string
         }
         Update: {
+          approval_pending?: boolean | null
+          approved?: boolean | null
           avatar_url?: string | null
           created_at?: string
           department?: string | null
           email?: string
           first_name?: string | null
+          hire_date?: string | null
           id?: string
           last_name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          position?: string | null
           role?: string
           updated_at?: string
         }
@@ -251,6 +323,44 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      user_onboarding_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_progress_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

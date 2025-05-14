@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { BarChart, Users, ShoppingCart, Settings, LogOut } from "lucide-react";
+import { BarChart, Users, ShoppingCart, Settings, LogOut, UserCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const ManagementSidebar = () => {
@@ -42,6 +42,17 @@ export const ManagementSidebar = () => {
             >
               <BarChart size={18} />
               <span>Management Dashboard</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              isActive={location.pathname === "/management/user-approval"}
+              onClick={() => navigate("/management/user-approval")}
+              tooltip="User Approval"
+            >
+              <UserCheck size={18} />
+              <span>User Approval</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           
