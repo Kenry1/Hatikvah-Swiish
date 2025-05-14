@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/onboarding';
@@ -23,25 +24,45 @@ import {
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const UserApprovalList = () => {
+interface UserApprovalListProps {
+  departmentFilter: string;
+}
+
+const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
   const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     fetchPendingUsers();
-  }, []);
+  }, [departmentFilter]);
 
   const fetchPendingUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
         .eq('approval_pending', true);
       
+      // Apply department filter if it's not 'all'
+      if (departmentFilter !== 'all' && departmentFilter) {
+        query = query.eq('department', departmentFilter);
+      }
+      
+      const { data, error } = await query;
+      
       if (error) throw error;
       
-      setPendingUsers(data as Profile[]);
+      // Transform the data to ensure all required properties are present
+      const transformedData = data.map(user => ({
+        ...user,
+        // Create name property from first_name and last_name
+        name: user.first_name && user.last_name 
+          ? `${user.first_name} ${user.last_name}` 
+          : (user.first_name || user.last_name || 'Unknown User')
+      })) as Profile[];
+      
+      setPendingUsers(transformedData);
     } catch (error: any) {
       console.error('Error fetching pending users:', error);
       toast({
@@ -74,7 +95,7 @@ const UserApprovalList = () => {
       toast({
         title: "User Approved",
         description: "User has been approved and can now login to the system.",
-        variant: "default" // Changed from "success" to "default"
+        variant: "default"
       });
     } catch (error: any) {
       console.error('Error approving user:', error);
@@ -106,7 +127,7 @@ const UserApprovalList = () => {
       toast({
         title: "User Rejected",
         description: "User has been rejected.",
-        variant: "default" // Changed from "success" to "default"
+        variant: "default"
       });
     } catch (error: any) {
       console.error('Error rejecting user:', error);
@@ -145,6 +166,7 @@ const UserApprovalList = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Department</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -163,6 +185,9 @@ const UserApprovalList = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <Badge>{user.role}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{user.department || 'Unassigned'}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" onClick={() => handleApproveUser(user.id)}>Approve</Button>
