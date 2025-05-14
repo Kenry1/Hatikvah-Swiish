@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -108,7 +107,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         avatar_url: data.avatar_url,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        name: data.name || (data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : null),
+        name: data.first_name && data.last_name ? `${data.first_name} ${data.last_name}` : null,
       };
       
       setProfile(profileData);

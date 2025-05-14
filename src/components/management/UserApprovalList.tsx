@@ -1,61 +1,52 @@
-
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, XCircle, AlertCircle, UserCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Profile } from '@/types/onboarding';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 
-interface UserForApproval {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  department: string | null;
-  role: string;
-  position: string | null;
-  approval_pending: boolean;
-  approved: boolean;
-  created_at: string;
-}
-
-interface UserApprovalListProps {
-  departmentFilter?: string;
-}
-
-const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
-  const [users, setUsers] = useState<UserForApproval[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+const UserApprovalList = () => {
+  const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetchUsers();
-  }, [departmentFilter]);
+    fetchPendingUsers();
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchPendingUsers = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('*');
-      
-      // Apply department filter if provided
-      if (departmentFilter && departmentFilter !== 'all') {
-        query = query.eq('department', departmentFilter);
-      }
-      
-      const { data, error } = await query;
+        .select('*')
+        .eq('approval_pending', true);
       
       if (error) throw error;
-      setUsers(data as UserForApproval[]);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+      
+      setPendingUsers(data as Profile[]);
+    } catch (error: any) {
+      console.error('Error fetching pending users:', error);
       toast({
-        title: "Error fetching users",
-        description: "There was a problem loading the user list.",
+        title: "Fetch Failed",
+        description: error.message || "Failed to fetch pending users.",
         variant: "destructive"
       });
     } finally {
@@ -63,42 +54,41 @@ const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
     }
   };
 
-  const approveUser = async (userId: string) => {
+  const handleApproveUser = async (userId: string) => {
     try {
+      // Update the user profile
       const { error } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
           approved: true,
-          approval_pending: false 
+          approval_pending: false
         })
         .eq('id', userId);
-
+      
       if (error) throw error;
       
-      // Update local state to reflect changes
-      setUsers(users.map(user => 
-        user.id === userId 
-          ? { ...user, approved: true, approval_pending: false }
-          : user
-      ));
+      // Refresh the user list
+      fetchPendingUsers();
       
+      // Show success toast
       toast({
-        title: "User approved",
-        description: "User can now access the system.",
-        variant: "default"
+        title: "User Approved",
+        description: "User has been approved and can now login to the system.",
+        variant: "default" // Changed from "success" to "default"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error approving user:', error);
       toast({
-        title: "Error approving user",
-        description: "There was a problem approving the user.",
+        title: "Approval Failed",
+        description: error.message || "An unknown error occurred",
         variant: "destructive"
       });
     }
   };
 
-  const rejectUser = async (userId: string) => {
+  const handleRejectUser = async (userId: string) => {
     try {
+      // Update the user profile
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -106,205 +96,84 @@ const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
           approval_pending: false
         })
         .eq('id', userId);
-
+      
       if (error) throw error;
       
-      // Update local state to reflect changes
-      setUsers(users.map(user => 
-        user.id === userId 
-          ? { ...user, approved: false, approval_pending: false }
-          : user
-      ));
+      // Refresh the user list
+      fetchPendingUsers();
       
+      // Show success toast
       toast({
-        title: "User rejected",
-        description: "User will not be able to access the system.",
-        variant: "default"
+        title: "User Rejected",
+        description: "User has been rejected.",
+        variant: "default" // Changed from "success" to "default"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error rejecting user:', error);
       toast({
-        title: "Error rejecting user",
-        description: "There was a problem rejecting the user.",
+        title: "Rejection Failed",
+        description: error.message || "An unknown error occurred",
         variant: "destructive"
       });
     }
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Loading user data...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Filter to get pending users for the badge count
-  const pendingUsers = users.filter(user => user.approval_pending);
-  // Filter to get approved users for management
-  const approvedUsers = users.filter(user => user.approved && !user.approval_pending);
-  // Filter to get rejected users
-  const rejectedUsers = users.filter(user => !user.approved && !user.approval_pending);
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex justify-between">
-          <span className="flex items-center">
-            <UserCheck className="mr-2 h-5 w-5" />
-            User Management
-          </span>
-          {pendingUsers.length > 0 && (
-            <Badge variant="destructive">{pendingUsers.length} Pending</Badge>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Approve or reject user access to the system based on their department and role
-        </CardDescription>
+        <CardTitle>Pending User Approvals</CardTitle>
+        <CardDescription>Approve or reject new user registrations.</CardDescription>
       </CardHeader>
       <CardContent>
-        {users.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-sm text-muted-foreground">No users found</p>
+        {loading ? (
+          <div className="flex flex-col space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[250px]" />
+                  <Skeleton className="h-4 w-[200px]" />
+                </div>
+              </div>
+            ))}
           </div>
+        ) : pendingUsers.length > 0 ? (
+          <Table>
+            <TableCaption>A list of users awaiting approval.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pendingUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-2">
+                      <Avatar>
+                        <AvatarImage src={user.avatar_url || undefined} alt={user.name || 'User Avatar'} />
+                        <AvatarFallback>{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <span>{user.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge>{user.role}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" onClick={() => handleApproveUser(user.id)}>Approve</Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleRejectUser(user.id)}>Reject</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
-          <div className="space-y-6">
-            {/* Pending Users Section */}
-            {pendingUsers.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium">Pending Approval</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          {user.first_name && user.last_name 
-                            ? `${user.first_name} ${user.last_name}` 
-                            : 'Unnamed User'}
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.department || 'Not specified'}</TableCell>
-                        <TableCell>{user.role}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm" 
-                              variant="default"
-                              onClick={() => approveUser(user.id)}
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button 
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => rejectUser(user.id)}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Approved Users Section */}
-            {approvedUsers.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium flex items-center">
-                  <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
-                  Approved Users
-                </h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {approvedUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          {user.first_name && user.last_name 
-                            ? `${user.first_name} ${user.last_name}` 
-                            : 'Unnamed User'}
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.department || 'Not specified'}</TableCell>
-                        <TableCell>{user.role}</TableCell>
-                        <TableCell>
-                          <Badge variant="success" className="bg-green-500">Approved</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Rejected Users Section */}
-            {rejectedUsers.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium flex items-center">
-                  <XCircle className="h-5 w-5 text-red-500 mr-2" />
-                  Rejected Users
-                </h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rejectedUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          {user.first_name && user.last_name 
-                            ? `${user.first_name} ${user.last_name}` 
-                            : 'Unnamed User'}
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.department || 'Not specified'}</TableCell>
-                        <TableCell>
-                          <Badge variant="destructive">Rejected</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </div>
+          <p>No pending user approvals.</p>
         )}
       </CardContent>
     </Card>

@@ -6,8 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/DashboardLayout';
-import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
-import TaskList from '@/components/onboarding/TaskList';
+import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
+import { TaskList } from '@/components/onboarding/TaskList';
 import { Loader2 } from 'lucide-react';
 
 const OnboardingDashboard = () => {
