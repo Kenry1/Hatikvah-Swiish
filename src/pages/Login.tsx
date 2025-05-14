@@ -33,19 +33,6 @@ export default function Login() {
   // Current app URL for QR code
   const appUrl = window.location.origin;
 
-  // Inspirational quotes array
-  const quotes = [
-    "The best way to predict the future is to invent it.",
-    "Innovation distinguishes between a leader and a follower.",
-    "The future belongs to those who believe in the beauty of their dreams.",
-    "Success is not the key to happiness. Happiness is the key to success.",
-    "The only way to do great work is to love what you do."
-  ];
-  
-  // Randomly select a quote
-  const [quote] = useState(quotes[Math.floor(Math.random() * quotes.length)]);
-
-  // Check if user is already logged in and redirect accordingly
   useEffect(() => {
     if (user) {
       // Check if user is approved
@@ -122,12 +109,12 @@ export default function Login() {
       setLoading(false);
     }
   };
-
+  
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
+    <div className="min-h-screen flex flex-col md:flex-row w-full bg-[#0f172a] text-white">
       {/* Left side - Login form */}
-      <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 p-4 md:p-8 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-auto border-none bg-[#1e293b] text-white">
+      <div className="w-full md:w-1/2 p-4 md:p-8 flex items-center justify-center">
+        <Card className="w-full max-w-sm mx-auto border-none bg-[#1e293b] text-white">
           <CardHeader>
             <CardTitle className="text-2xl">Hatikvah Swiish</CardTitle>
             <CardDescription className="text-gray-300">Login or create an account to get started</CardDescription>
@@ -171,17 +158,16 @@ export default function Login() {
       </div>
 
       {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 xl:w-2/3 bg-[#0f172a] relative">
+      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative">
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-3xl h-auto aspect-w-16 aspect-h-9">
-            <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl">
-              <div className="flex flex-col items-center justify-center h-full p-6 md:p-10">
+          <div className="w-full max-w-3xl h-auto" style={{ maxHeight: '90vh' }}>
+            <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl h-full">
+              <div className="flex flex-col items-center justify-center h-full p-6 md:p-10 overflow-y-auto">
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 md:mb-10 text-center">
                   African electrical engineer picture
                 </h2>
                 <div className="bg-white rounded-full py-3 px-6 md:py-4 md:px-10 max-w-lg">
                   <p className="text-black font-medium text-lg md:text-xl">
-                    {quote}
                   </p>
                 </div>
               </div>
