@@ -34,6 +34,7 @@ const LoginForm = ({ onSubmit, error, loading }: LoginFormProps) => {
             placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
         <div className="grid gap-2">
@@ -43,9 +44,14 @@ const LoginForm = ({ onSubmit, error, loading }: LoginFormProps) => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
-        <Button type="submit" disabled={loading}>
+        <Button 
+          type="submit" 
+          disabled={loading} 
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           {loading ? "Signing in..." : "Sign In"}
         </Button>
       </div>

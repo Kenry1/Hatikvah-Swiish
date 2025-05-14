@@ -10,6 +10,18 @@ const WaitingApproval = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Inspirational quotes array
+  const quotes = [
+    "Patience is not the ability to wait, but the ability to keep a good attitude while waiting.",
+    "The two most powerful warriors are patience and time.",
+    "Patience is bitter, but its fruit is sweet.",
+    "Patience is not simply the ability to wait - it's how we behave while we're waiting.",
+    "Great works are performed not by strength but by perseverance."
+  ];
+  
+  // Randomly select a quote
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -71,41 +83,60 @@ const WaitingApproval = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Clock className="mr-2 h-5 w-5 text-yellow-500" />
-            Account Waiting Approval
-          </CardTitle>
-          <CardDescription>
-            Your account is pending approval by a department manager
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-md border border-yellow-200 dark:border-yellow-800">
-            <p className="text-sm text-muted-foreground">
-              Thank you for signing up. A manager from your department needs to approve your account before you can access the system. 
-              This page will automatically refresh when your account is approved.
-            </p>
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
+      {/* Left side - Status card */}
+      <div className="w-full md:w-1/3 p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md bg-[#1e293b] border-none text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="mr-2 h-5 w-5 text-yellow-500" />
+              Account Waiting Approval
+            </CardTitle>
+            <CardDescription className="text-gray-300">
+              Your account is pending approval by a department manager
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-yellow-900/30 p-4 rounded-md border border-yellow-800">
+              <p className="text-sm text-yellow-200">
+                Thank you for signing up. A manager from your department needs to approve your account before you can access the system. 
+                This page will automatically refresh when your account is approved.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <Check className="h-5 w-5 mr-2 text-green-500" />
+                <span>Account created successfully</span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-yellow-500" />
+                <span>Waiting for department manager approval</span>
+              </div>
+              <div className="flex items-center text-gray-400">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <span>Access to system (pending)</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right side - Image and quote */}
+      <div className="hidden md:flex md:w-2/3 bg-[#0f172a] relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="w-4/5 h-2/3 rounded-3xl bg-[#67e8f9] flex flex-col items-center justify-center p-10">
+            <h2 className="text-5xl font-bold text-white mb-10 text-center">
+              African electrical engineer picture
+            </h2>
+            <div className="bg-white rounded-full py-4 px-10 max-w-lg">
+              <p className="text-black font-medium text-xl">
+                {quote}
+              </p>
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Check className="h-5 w-5 mr-2 text-green-500" />
-              <span>Account created successfully</span>
-            </div>
-            <div className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-yellow-500" />
-              <span>Waiting for department manager approval</span>
-            </div>
-            <div className="flex items-center text-muted-foreground">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              <span>Access to system (pending)</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

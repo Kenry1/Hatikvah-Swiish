@@ -57,7 +57,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="bg-red-900/50 border-red-800">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -70,6 +70,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
             placeholder="John Doe"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
         <div className="grid gap-2">
@@ -80,15 +81,16 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
             placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="role">Role</Label>
           <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-[#1e293b] text-white border-[#475569]">
               <SelectItem value="technician">Technician</SelectItem>
               <SelectItem value="warehouse">Warehouse Manager</SelectItem>
               <SelectItem value="logistics">Logistics Manager</SelectItem>
@@ -111,6 +113,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
         <div className="grid gap-2">
@@ -120,9 +123,14 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
-        <Button type="submit" disabled={loading}>
+        <Button 
+          type="submit" 
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           {loading ? "Creating Account..." : "Create Account"}
         </Button>
       </div>
