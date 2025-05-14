@@ -5,10 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Check, Clock, AlertCircle } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const WaitingApproval = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Inspirational quotes array
   const quotes = [
@@ -85,8 +88,8 @@ const WaitingApproval = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
       {/* Left side - Status card */}
-      <div className="w-full md:w-1/3 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md bg-[#1e293b] border-none text-white">
+      <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 p-4 md:p-8 flex items-center justify-center">
+        <Card className="w-full max-w-md border-none bg-[#1e293b] text-white">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Clock className="mr-2 h-5 w-5 text-yellow-500" />
@@ -123,17 +126,21 @@ const WaitingApproval = () => {
       </div>
 
       {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-2/3 bg-[#0f172a] relative">
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="w-4/5 h-2/3 rounded-3xl bg-[#67e8f9] flex flex-col items-center justify-center p-10">
-            <h2 className="text-5xl font-bold text-white mb-10 text-center">
-              African electrical engineer picture
-            </h2>
-            <div className="bg-white rounded-full py-4 px-10 max-w-lg">
-              <p className="text-black font-medium text-xl">
-                {quote}
-              </p>
-            </div>
+      <div className="hidden md:flex md:w-1/2 lg:w-3/5 xl:w-2/3 bg-[#0f172a] relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
+          <div className="w-full max-w-3xl h-auto">
+            <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl">
+              <div className="flex flex-col items-center justify-center h-full p-6 md:p-10">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 md:mb-10 text-center">
+                  African electrical engineer picture
+                </h2>
+                <div className="bg-white rounded-full py-3 px-6 md:py-4 md:px-10 max-w-lg">
+                  <p className="text-black font-medium text-lg md:text-xl">
+                    {quote}
+                  </p>
+                </div>
+              </div>
+            </AspectRatio>
           </div>
         </div>
       </div>

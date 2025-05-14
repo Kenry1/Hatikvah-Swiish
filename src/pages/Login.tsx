@@ -14,12 +14,15 @@ import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { redirectBasedOnRole } from "@/utils/roleBasedRedirection";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 export default function Login() {
   const auth = useAuth();
   const { signIn, signUp, user } = auth;
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Shared state
   const [loading, setLoading] = useState(false);
@@ -123,7 +126,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
       {/* Left side - Login form */}
-      <div className="w-full md:w-1/3 p-4 flex items-center justify-center">
+      <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 p-4 md:p-8 flex items-center justify-center">
         <Card className="w-full max-w-md mx-auto border-none bg-[#1e293b] text-white">
           <CardHeader>
             <CardTitle className="text-2xl">Hatikvah Swiish</CardTitle>
@@ -168,17 +171,21 @@ export default function Login() {
       </div>
 
       {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-2/3 bg-[#0f172a] relative">
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="w-4/5 h-2/3 rounded-3xl bg-[#67e8f9] flex flex-col items-center justify-center p-10">
-            <h2 className="text-5xl font-bold text-white mb-10 text-center">
-              African electrical engineer picture
-            </h2>
-            <div className="bg-white rounded-full py-4 px-10 max-w-lg">
-              <p className="text-black font-medium text-xl">
-                {quote}
-              </p>
-            </div>
+      <div className="hidden md:flex md:w-1/2 lg:w-3/5 xl:w-2/3 bg-[#0f172a] relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
+          <div className="w-full max-w-3xl h-auto aspect-w-16 aspect-h-9">
+            <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl">
+              <div className="flex flex-col items-center justify-center h-full p-6 md:p-10">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 md:mb-10 text-center">
+                  African electrical engineer picture
+                </h2>
+                <div className="bg-white rounded-full py-3 px-6 md:py-4 md:px-10 max-w-lg">
+                  <p className="text-black font-medium text-lg md:text-xl">
+                    {quote}
+                  </p>
+                </div>
+              </div>
+            </AspectRatio>
           </div>
         </div>
       </div>

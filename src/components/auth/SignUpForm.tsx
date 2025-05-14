@@ -54,86 +54,84 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4">
-        {error && (
-          <Alert variant="destructive" className="bg-red-900/50 border-red-800">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <div className="grid gap-2">
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="signup-email">Email</Label>
-          <Input
-            id="signup-email"
-            type="email"
-            placeholder="m@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="role">Role</Label>
-          <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
-            <SelectTrigger className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500">
-              <SelectValue placeholder="Select a role" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1e293b] text-white border-[#475569]">
-              <SelectItem value="technician">Technician</SelectItem>
-              <SelectItem value="warehouse">Warehouse Manager</SelectItem>
-              <SelectItem value="logistics">Logistics Manager</SelectItem>
-              <SelectItem value="hr">HR Manager</SelectItem>
-              <SelectItem value="implementation_manager">Implementation Manager</SelectItem>
-              <SelectItem value="project_manager">Project Manager</SelectItem>
-              <SelectItem value="planning">Planning Manager</SelectItem>
-              <SelectItem value="it">IT Manager</SelectItem>
-              <SelectItem value="finance">Finance Manager</SelectItem>
-              <SelectItem value="management">Management</SelectItem>
-              <SelectItem value="ehs">EHS Manager</SelectItem>
-              <SelectItem value="procurement">Procurement Manager</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="signup-password">Password</Label>
-          <Input
-            id="signup-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="confirm-password">Confirm Password</Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
-          />
-        </div>
-        <Button 
-          type="submit" 
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {loading ? "Creating Account..." : "Create Account"}
-        </Button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive" className="bg-red-900/50 border-red-800">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="grid gap-2">
+        <Label htmlFor="name">Full Name</Label>
+        <Input
+          id="name"
+          type="text"
+          placeholder="John Doe"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+        />
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="signup-email">Email</Label>
+        <Input
+          id="signup-email"
+          type="email"
+          placeholder="m@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="role">Role</Label>
+        <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+          <SelectTrigger className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500">
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1e293b] text-white border-[#475569]">
+            <SelectItem value="technician">Technician</SelectItem>
+            <SelectItem value="warehouse">Warehouse Manager</SelectItem>
+            <SelectItem value="logistics">Logistics Manager</SelectItem>
+            <SelectItem value="hr">HR Manager</SelectItem>
+            <SelectItem value="implementation_manager">Implementation Manager</SelectItem>
+            <SelectItem value="project_manager">Project Manager</SelectItem>
+            <SelectItem value="planning">Planning Manager</SelectItem>
+            <SelectItem value="it">IT Manager</SelectItem>
+            <SelectItem value="finance">Finance Manager</SelectItem>
+            <SelectItem value="management">Management</SelectItem>
+            <SelectItem value="ehs">EHS Manager</SelectItem>
+            <SelectItem value="procurement">Procurement Manager</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="signup-password">Password</Label>
+        <Input
+          id="signup-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="confirm-password">Confirm Password</Label>
+        <Input
+          id="confirm-password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+        />
+      </div>
+      <Button 
+        type="submit" 
+        disabled={loading}
+        className="bg-blue-600 hover:bg-blue-700 w-full mt-2"
+      >
+        {loading ? "Creating Account..." : "Create Account"}
+      </Button>
     </form>
   );
 };

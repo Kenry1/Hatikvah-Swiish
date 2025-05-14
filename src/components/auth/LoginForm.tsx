@@ -3,8 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -50,7 +48,7 @@ const LoginForm = ({ onSubmit, error, loading }: LoginFormProps) => {
         <Button 
           type="submit" 
           disabled={loading} 
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 mt-2"
         >
           {loading ? "Signing in..." : "Sign In"}
         </Button>
