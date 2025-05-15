@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Check, Clock, AlertCircle } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { redirectBasedOnRole } from '@/utils/roleBasedRedirection';
 
 const WaitingApproval = () => {
   const { user } = useAuth();
@@ -44,7 +45,7 @@ const WaitingApproval = () => {
         
         // If user is approved, redirect them to their dashboard
         if (data && data.approved) {
-          navigate(getRedirectPath(user.role));
+          navigate(redirectBasedOnRole(user.role));
         }
         
         // If user is rejected (not pending and not approved)
@@ -126,22 +127,23 @@ const WaitingApproval = () => {
       </div>
 
       {/* Right side - Image */}
-      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative rounded-3xl overflow-hidden"> {/* New parent div */}
+      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative rounded-3xl overflow-hidden">
         <img
           src="/home-image.jpg"
           alt="A person looking at a home"
           className="object-cover w-full h-full rounded-3xl"
         />
- <div className="absolute top-0 left-0 right-0 p-4 text-center z-10"> {/* Text div */}
- <p className="text-white text-lg font-semibold leading-tight">
- "Any product that needs a manual to work is broken."
- </p>
- <p className="text-white text-sm italic mt-1">
- — Elon Musk
- </p>
- </div>
+        <div className="absolute top-0 left-0 right-0 p-4 text-center z-10">
+          <p className="text-white text-lg font-semibold leading-tight">
+            "{quote}"
+          </p>
+          <p className="text-white text-sm italic mt-1">
+            — Elon Musk
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
 export default WaitingApproval;
