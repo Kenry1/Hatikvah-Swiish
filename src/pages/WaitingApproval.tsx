@@ -144,3 +144,4 @@ const WaitingApproval = () => {
     </div>
   );
 }
+export default WaitingApproval;
