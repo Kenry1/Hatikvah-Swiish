@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,9 +36,18 @@ export default function Login() {
   useEffect(() => {
     // Check if user is already logged in when component mounts
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      console.log("Checking for existing session");
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error checking session:", error);
+      }
+      
       if (data.session?.user) {
+        console.log("Found existing session for user:", data.session.user.id);
         handleUserRedirection(data.session.user.id);
+      } else {
+        console.log("No existing session found");
       }
     };
 
@@ -46,12 +56,14 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
+      console.log("User state updated, redirecting user:", user.id);
       handleUserRedirection(user.id);
     }
   }, [user, navigate]);
 
   const handleUserRedirection = async (userId: string) => {
     try {
+      console.log("Checking profile status for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('approved, approval_pending')
@@ -63,15 +75,21 @@ export default function Login() {
         return;
       }
       
+      console.log("Profile status:", data);
+      
       if (data) {
         if (data.approval_pending) {
+          console.log("User pending approval, redirecting to waiting approval page");
           navigate('/waiting-approval');
         } else if (data.approved) {
           // Explicitly cast user.role as UserRole if it exists, or provide a valid default
           const userRole = (user?.role || 'technician') as UserRole;
-          navigate(redirectBasedOnRole(userRole));
+          const redirectPath = redirectBasedOnRole(userRole);
+          console.log(`User approved, redirecting to ${redirectPath} based on role ${userRole}`);
+          navigate(redirectPath);
         } else {
           // User was rejected, log them out
+          console.log("User was rejected, logging out");
           await auth.signOut();
           setError("Your account has been rejected. Please contact support.");
         }
@@ -90,11 +108,13 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
+      console.log("Attempting to sign in user:", email);
       await signIn(email, password);
+      console.log("Sign in successful");
       // Success toast is handled after redirection
     } catch (error: any) {
-      setError("Invalid email or password. Please try again.");
       console.error("Login error:", error);
+      setError("Invalid email or password. Please try again.");
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -109,16 +129,20 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
+      console.log("Starting signup process for:", email, "with role:", role);
       await signUp(email, password, role, name);
       
+      console.log("Signup successful, showing success toast");
       toast({
         title: "Account created!",
         description: "Your account is now pending approval by a department manager.",
       });
 
       // Immediately redirect to waiting approval page after signup
+      console.log("Redirecting to waiting approval page");
       navigate('/waiting-approval');
     } catch (error: any) {
+      console.error("Registration error:", error);
       setError(error.message || "Failed to create account. Please try again.");
       toast({
         variant: "destructive",

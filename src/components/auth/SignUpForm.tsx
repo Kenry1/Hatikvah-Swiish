@@ -52,9 +52,12 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting sign-up form", { name, email, role });
       await onSubmit(name, email, password, role);
+      console.log("Sign-up form submission completed");
       // The redirection is now handled in Login.tsx
     } catch (error: any) {
+      console.error("Error during sign-up form submission:", error);
       setError(error.message || "Failed to create account. Please try again.");
     } finally {
       setIsSubmitting(false);

@@ -11,21 +11,29 @@ export const useAuthProvider = () => {
 
   // Set up auth state listener and check current session
   useEffect(() => {
+    console.log("Setting up auth state listener");
     // Set up an auth state listener before checking current session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         // Handle auth state change synchronously first
         setIsLoading(true);
+        console.log("Auth state changed:", event, session?.user?.id);
         
         if (session?.user) {
           try {
             // Fetch the user profile on auth state change
-            const { data: profile } = await supabase
+            console.log("Fetching profile for user:", session.user.id);
+            const { data: profile, error } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
               .single();
             
+            if (error) {
+              console.error("Error fetching profile:", error);
+            }
+            
+            console.log("Profile fetched:", profile);
             setUser(createUserFromSupabase(session.user, profile));
           } catch (error) {
             console.error("Error fetching user profile:", error);
@@ -42,17 +50,30 @@ export const useAuthProvider = () => {
     // Check if the user is already logged in after setting up listener
     const checkCurrentUser = async () => {
       try {
+        console.log("Checking current session");
         // Get the current session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error getting session:", sessionError);
+        }
+        
+        console.log("Current session:", session?.user?.id);
         
         if (session?.user) {
           // If there's a session, fetch the user profile
-          const { data: profile } = await supabase
+          console.log("Fetching profile for existing user");
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
           
+          if (profileError) {
+            console.error("Error fetching profile for existing user:", profileError);
+          }
+          
+          console.log("Existing user profile:", profile);
           // Create a User object
           setUser(createUserFromSupabase(session.user, profile));
         }
@@ -66,6 +87,7 @@ export const useAuthProvider = () => {
     checkCurrentUser();
     
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -74,6 +96,7 @@ export const useAuthProvider = () => {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Signing in user:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -81,6 +104,7 @@ export const useAuthProvider = () => {
       
       if (error) throw error;
       
+      console.log("Sign in successful:", data.user?.id);
       // Return data instead of void
       return data;
     } catch (error) {
@@ -94,6 +118,7 @@ export const useAuthProvider = () => {
   const signUp = async (email: string, password: string, role: UserRole, name: string) => {
     setIsLoading(true);
     try {
+      console.log("Signing up new user:", email, "with role:", role);
       // Extract first and last name
       const nameParts = name.trim().split(' ');
       const firstName = nameParts[0];
@@ -113,10 +138,16 @@ export const useAuthProvider = () => {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error from Supabase:", error);
+        throw error;
+      }
+      
+      console.log("Auth signup successful, user created:", data.user?.id);
       
       // Create a profile record
       if (data.user) {
+        console.log("Creating profile for new user");
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
@@ -133,13 +164,20 @@ export const useAuthProvider = () => {
             onboarding_step: 0
           });
         
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          throw profileError;
+        }
+        
+        console.log("Profile created successfully");
+      } else {
+        console.warn("No user returned from signup, cannot create profile");
       }
       
       // Don't set the user here - let the auth state change listener handle it
       return Promise.resolve();
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Signup process error:", error);
       throw error;
     } finally {
       setIsLoading(false); // Ensure loading state is reset regardless of outcome
@@ -148,8 +186,10 @@ export const useAuthProvider = () => {
 
   const signOut = async () => {
     try {
+      console.log("Signing out user");
       await supabase.auth.signOut();
       setUser(null);
+      console.log("User signed out successfully");
     } catch (error) {
       console.error("Logout error:", error);
     }
