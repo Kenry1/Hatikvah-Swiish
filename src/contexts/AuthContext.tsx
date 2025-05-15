@@ -160,22 +160,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
         
         if (profileError) throw profileError;
-        
-        // Create a User object
-        const newUser: User = {
-          id: data.user.id,
-          email,
-          role,
-          name
-        };
-        
-        setUser(newUser);
       }
+      
+      // Don't set the user here - let the auth state change listener handle it
+      return Promise.resolve();
     } catch (error) {
       console.error("Signup error:", error);
       throw error;
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading state is reset regardless of outcome
     }
   };
 

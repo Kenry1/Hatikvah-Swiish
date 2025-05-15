@@ -1,3 +1,4 @@
+
 export type UserRole =
   | 'technician'
   | 'warehouse'
@@ -10,7 +11,8 @@ export type UserRole =
   | 'finance'
   | 'management'
   | 'ehs'
-  | 'procurement';
+  | 'procurement'
+  | 'user'; // Added 'user' as a valid role for default cases
 
 export interface User {
   id: string;

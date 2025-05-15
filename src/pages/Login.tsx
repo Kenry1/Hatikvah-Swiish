@@ -68,8 +68,8 @@ export default function Login() {
         if (data.approval_pending) {
           navigate('/waiting-approval');
         } else if (data.approved) {
-          // Fix: Explicitly cast user.role as UserRole if it exists, or provide a valid default
-          const userRole = (user?.role || 'technician') as UserRole; // Using 'technician' as default since 'user' is not in UserRole enum
+          // Explicitly cast user.role as UserRole if it exists, or provide a valid default
+          const userRole = (user?.role || 'technician') as UserRole;
           navigate(redirectBasedOnRole(userRole));
         } else {
           // User was rejected, log them out
@@ -92,7 +92,6 @@ export default function Login() {
     setError("");
     try {
       await signIn(email, password);
-      
       // Success toast is handled after redirection
     } catch (error: any) {
       setError("Invalid email or password. Please try again.");

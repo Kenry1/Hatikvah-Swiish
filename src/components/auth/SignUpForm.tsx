@@ -26,6 +26,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
   const [name, setName] = useState("");
   const [role, setRole] = useState<UserRole>("technician");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +47,20 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
     }
     
     setError("");
+    setIsSubmitting(true);
+    
     try {
       await onSubmit(name, email, password, role);
+      // Form submission was successful
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  // Use either the parent component's loading state or this component's submission state
+  const isLoading = loading || isSubmitting;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,6 +79,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+          disabled={isLoading}
         />
       </div>
       <div className="grid gap-2">
@@ -81,11 +91,16 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+          disabled={isLoading}
         />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="role">Role</Label>
-        <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+        <Select 
+          value={role} 
+          onValueChange={(value) => setRole(value as UserRole)}
+          disabled={isLoading}
+        >
           <SelectTrigger className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500">
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>
@@ -113,6 +128,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+          disabled={isLoading}
         />
       </div>
       <div className="grid gap-2">
@@ -123,14 +139,15 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
+          disabled={isLoading}
         />
       </div>
       <Button 
         type="submit" 
-        disabled={loading}
+        disabled={isLoading}
         className="bg-blue-600 hover:bg-blue-700 w-full mt-2"
       >
-        {loading ? "Creating Account..." : "Create Account"}
+        {isLoading ? "Creating Account..." : "Create Account"}
       </Button>
     </form>
   );
