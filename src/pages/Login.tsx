@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,7 +68,9 @@ export default function Login() {
         if (data.approval_pending) {
           navigate('/waiting-approval');
         } else if (data.approved) {
-          navigate(redirectBasedOnRole(user?.role || 'user'));
+          // Fix: Explicitly cast user.role as UserRole if it exists, or provide a valid default
+          const userRole = (user?.role || 'technician') as UserRole; // Using 'technician' as default since 'user' is not in UserRole enum
+          navigate(redirectBasedOnRole(userRole));
         } else {
           // User was rejected, log them out
           await auth.signOut();
@@ -108,9 +111,7 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      // Ensure role is a valid UserRole (TypeScript fix)
-      const validRole = role as UserRole;
-      await signUp(email, password, validRole, name);
+      await signUp(email, password, role, name);
       
       toast({
         title: "Account created!",
