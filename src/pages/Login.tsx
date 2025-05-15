@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,7 +108,9 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await signUp(email, password, role, name);
+      // Ensure role is a valid UserRole (TypeScript fix)
+      const validRole = role as UserRole;
+      await signUp(email, password, validRole, name);
       
       toast({
         title: "Account created!",

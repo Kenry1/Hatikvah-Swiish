@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  // Update the return type to match the actual implementation
+  signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (error) throw error;
       
-      // The auth state change listener will update the user state
+      // Return data instead of void
       return data;
     } catch (error) {
       console.error("Login error:", error);
