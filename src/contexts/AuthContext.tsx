@@ -37,7 +37,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Effects must be inside the component body
   useEffect(() => {
-    // Check if the user is already logged in
+    // Set up an auth state listener before checking current session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Handle auth state change synchronously first
+        setIsLoading(true);
+        
+        if (session?.user) {
+          try {
+            // Fetch the user profile on auth state change
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            setUser(createUserFromSupabase(session.user, profile));
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+          } finally {
+            setIsLoading(false);
+          }
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
+    
+    // Check if the user is already logged in after setting up listener
     const checkCurrentUser = async () => {
       try {
         // Get the current session
@@ -60,28 +88,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
       }
     };
-
-    // Set up an auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          try {
-            // Fetch the user profile on auth state change
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            
-            setUser(createUserFromSupabase(session.user, profile));
-          } catch (error) {
-            console.error("Error fetching user profile:", error);
-          }
-        } else {
-          setUser(null);
-        }
-      }
-    );
     
     checkCurrentUser();
     
@@ -101,11 +107,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) throw error;
       
       // The auth state change listener will update the user state
+      return data;
     } catch (error) {
       console.error("Login error:", error);
       throw error;
     } finally {
-      setIsLoading(false);
+      // Don't set isLoading to false here - let the auth state change handle it
     }
   };
 
@@ -143,6 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             role,
             first_name: firstName,
             last_name: lastName,
+            name, // Add name field explicitly
             department: role, // Using role as the initial department
             approval_pending: true,
             approved: false,

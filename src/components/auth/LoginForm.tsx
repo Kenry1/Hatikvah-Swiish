@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -32,6 +33,7 @@ const LoginForm = ({ onSubmit, error, loading }: LoginFormProps) => {
             placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
             className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
@@ -42,6 +44,7 @@ const LoginForm = ({ onSubmit, error, loading }: LoginFormProps) => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
             className="bg-[#334155] border-[#475569] focus-visible:ring-blue-500"
           />
         </div>
@@ -50,7 +53,14 @@ const LoginForm = ({ onSubmit, error, loading }: LoginFormProps) => {
           disabled={loading} 
           className="bg-blue-600 hover:bg-blue-700 mt-2"
         >
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            "Sign In"
+          )}
         </Button>
       </div>
     </form>

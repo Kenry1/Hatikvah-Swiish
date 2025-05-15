@@ -34,37 +34,51 @@ export default function Login() {
   const appUrl = window.location.origin;
 
   useEffect(() => {
+    // Check if user is already logged in when component mounts
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        handleUserRedirection(data.session.user.id);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  useEffect(() => {
     if (user) {
-      // Check if user is approved
-      const checkApprovalStatus = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('approved, approval_pending')
-            .eq('id', user.id)
-            .single();
-
-          if (error) throw error;
-          
-          if (data) {
-            if (data.approval_pending) {
-              navigate('/waiting-approval');
-            } else if (data.approved) {
-              navigate(redirectBasedOnRole(user.role));
-            } else {
-              // User was rejected, log them out
-              await auth.signOut();
-              setError("Your account has been rejected. Please contact support.");
-            }
-          }
-        } catch (error) {
-          console.error('Error checking approval status:', error);
-        }
-      };
-
-      checkApprovalStatus();
+      handleUserRedirection(user.id);
     }
   }, [user, navigate]);
+
+  const handleUserRedirection = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('approved, approval_pending')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking profile status:', error);
+        return;
+      }
+      
+      if (data) {
+        if (data.approval_pending) {
+          navigate('/waiting-approval');
+        } else if (data.approved) {
+          navigate(redirectBasedOnRole(user?.role || 'user'));
+        } else {
+          // User was rejected, log them out
+          await auth.signOut();
+          setError("Your account has been rejected. Please contact support.");
+        }
+      }
+    } catch (err) {
+      console.error('Error in user redirection:', err);
+    }
+  };
 
   const handleSignIn = async (email: string, password: string) => {
     if (!email || !password) {
@@ -77,15 +91,15 @@ export default function Login() {
     try {
       await signIn(email, password);
       
-      toast({
-        title: "Success",
-        description: "You have successfully logged in.",
-      });
-      
-      // The user state will be updated via the useEffect hook
-    } catch (error) {
+      // Success toast is handled after redirection
+    } catch (error: any) {
       setError("Invalid email or password. Please try again.");
       console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Invalid email or password.",
+      });
     } finally {
       setLoading(false);
     }
@@ -105,6 +119,11 @@ export default function Login() {
       navigate('/waiting-approval');
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error.message || "Failed to create account.",
+      });
     } finally {
       setLoading(false);
     }
@@ -158,20 +177,22 @@ export default function Login() {
       </div>
 
       {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative rounded-3xl overflow-hidden"> {/* New parent div */}
-        <img
-          src="/home-image.jpg"
-          alt="A person looking at a home"
-          className="object-cover w-full h-full rounded-3xl"
-        />
- <div className="absolute top-0 left-0 right-0 p-4 text-center z-10"> {/* Text div */}
- <p className="text-white text-lg font-semibold leading-tight">
- "Any product that needs a manual to work is broken."
- </p>
- <p className="text-white text-sm italic mt-1">
- — Elon Musk
- </p>
- </div>
+      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative overflow-hidden">
+        <AspectRatio ratio={16/9} className="h-full w-full">
+          <img
+            src="/home-image.jpg"
+            alt="A person looking at a home"
+            className="object-cover w-full h-full"
+          />
+        </AspectRatio>
+        <div className="absolute top-0 left-0 right-0 p-8 text-center z-10 bg-gradient-to-b from-[#0f172a]/80 to-transparent">
+          <p className="text-white text-xl font-semibold leading-tight">
+            "Any product that needs a manual to work is broken."
+          </p>
+          <p className="text-white text-sm italic mt-2">
+            — Elon Musk
+          </p>
+        </div>
       </div>
     </div>
   );
