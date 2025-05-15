@@ -126,15 +126,21 @@ const WaitingApproval = () => {
       </div>
 
       {/* Right side - Image */}
-      <div className="hidden md:flex md:w-1/2 relative rounded-l-3xl overflow-hidden">
+      <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative rounded-3xl overflow-hidden"> {/* New parent div */}
         <img
-          src="/waiting-image.jpg"
-          alt="Waiting for approval" // Provide a meaningful alt text
-          className="object-cover w-full h-full pr-4"
+          src="/home-image.jpg"
+          alt="A person looking at a home"
+          className="object-cover w-full h-full rounded-3xl"
         />
+ <div className="absolute top-0 left-0 right-0 p-4 text-center z-10"> {/* Text div */}
+ <p className="text-white text-lg font-semibold leading-tight">
+ "Any product that needs a manual to work is broken."
+ </p>
+ <p className="text-white text-sm italic mt-1">
+ — Elon Musk
+ </p>
+ </div>
       </div>
     </div>
   );
-};
-
-export default WaitingApproval;
+}
