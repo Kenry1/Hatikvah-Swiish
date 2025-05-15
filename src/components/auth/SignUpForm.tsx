@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ interface SignUpFormProps {
 }
 
 const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -51,7 +53,7 @@ const SignUpForm = ({ onSubmit, loading }: SignUpFormProps) => {
     
     try {
       await onSubmit(name, email, password, role);
-      // Form submission was successful
+      // The redirection is now handled in Login.tsx
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
     } finally {

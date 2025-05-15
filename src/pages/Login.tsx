@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -117,6 +116,7 @@ export default function Login() {
         description: "Your account is now pending approval by a department manager.",
       });
 
+      // Immediately redirect to waiting approval page after signup
       navigate('/waiting-approval');
     } catch (error: any) {
       setError(error.message || "Failed to create account. Please try again.");
