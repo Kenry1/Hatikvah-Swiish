@@ -87,8 +87,8 @@ const WaitingApproval = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#0f172a] text-white">
-      {/* Left side - Status card */}
-      <div className="w-full md:w-2/3 lg:w-1/2 xl:w-2/5 p-4 md:p-8 flex items-center justify-center">
+      {/* Left side - Status card - Fills display */}
+      <div className="w-full p-4 md:p-8 flex items-center justify-center">
         <Card className="w-full max-w-md border-none bg-[#1e293b] text-white">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -125,24 +125,13 @@ const WaitingApproval = () => {
         </Card>
       </div>
 
-      {/* Right side - Image and quote */}
-      <div className="hidden md:flex md:w-1/3 lg:w-1/2 xl:w-3/5 bg-[#0f172a] relative">
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-3xl h-auto">
-            <AspectRatio ratio={16 / 9} className="bg-[#67e8f9] rounded-3xl">
-              <div className="flex flex-col items-center justify-center h-full p-6 md:p-10">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 md:mb-10 text-center">
-                  African electrical engineer picture
-                </h2>
-                <div className="bg-white rounded-full py-3 px-6 md:py-4 md:px-10 max-w-lg">
-                  <p className="text-black font-medium text-lg md:text-xl">
-                    {quote}
-                  </p>
-                </div>
-              </div>
-            </AspectRatio>
-          </div>
-        </div>
+      {/* Right side - Image */}
+      <div className="hidden md:flex md:w-1/2 relative rounded-l-3xl overflow-hidden">
+        <img
+          src="/waiting-image.jpg"
+          alt="Waiting for approval" // Provide a meaningful alt text
+          className="object-cover w-full h-full pr-4"
+        />
       </div>
     </div>
   );

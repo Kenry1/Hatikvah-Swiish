@@ -159,9 +159,9 @@ export default function Login() {
 
       {/* Right side - Image and quote */}
       <div className="hidden md:flex md:w-1/2 bg-[#0f172a] relative rounded-3xl overflow-hidden"> {/* New parent div */}
- <img
-          src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fst.depositphotos.com%2F7247698%2F56662%2Fi%2F450%2Fdepositphotos_566626298-stock-photo-happy-black-african-women-engineer.jpg&sp=1747210155Tf3d1db4d6081f0e328b64c0828e2ae3643c56ea3eed897efb5bd28a89132f75e"
-          alt="African electrical engineer"
+        <img
+          src="/home-image.jpg"
+          alt="A person looking at a home"
           className="object-cover w-full h-full rounded-3xl"
         />
  <div className="absolute top-0 left-0 right-0 p-4 text-center z-10"> {/* Text div */}
