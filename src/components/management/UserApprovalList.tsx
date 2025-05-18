@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client'; // Remove Supabase import
+import { db } from '@/integrations/firebase/firebase'; // Import Firestore
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'; // Import necessary Firestore functions
 import { Profile } from '@/types/onboarding';
 import { 
   Card, 
@@ -12,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge"; // Corrected import path
 import {
   Table,
   TableBody,
@@ -21,8 +23,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { serverTimestamp } from 'firebase/firestore';
 
 interface UserApprovalListProps {
   departmentFilter: string;
@@ -39,28 +42,39 @@ const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
   const fetchPendingUsers = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('profiles')
-        .select('*')
-        .eq('approval_pending', true);
+      const profilesRef = collection(db, 'profiles');
+      let q = query(profilesRef, where('approval_pending', '==', true));
       
       // Apply department filter if it's not 'all'
       if (departmentFilter !== 'all' && departmentFilter) {
-        query = query.eq('department', departmentFilter);
+        q = query(q, where('department', '==', departmentFilter));
       }
       
-      const { data, error } = await query;
+      const querySnapshot = await getDocs(q);
       
-      if (error) throw error;
-      
-      // Transform the data to ensure all required properties are present
-      const transformedData = data.map(user => ({
-        ...user,
-        // Create name property from first_name and last_name
-        name: user.first_name && user.last_name 
-          ? `${user.first_name} ${user.last_name}` 
-          : (user.first_name || user.last_name || 'Unknown User')
-      })) as Profile[];
+      // Transform the data to ensure all required properties are present and map Firestore Timestamps
+      const transformedData = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          email: data.email,
+          role: data.role,
+          department: data.department || null,
+          first_name: data.first_name || null,
+          last_name: data.last_name || null,
+          position: data.position || null,
+          hire_date: data.hire_date || null,
+          onboarding_completed: data.onboarding_completed || false,
+          onboarding_step: data.onboarding_step || 0,
+          avatar_url: data.avatar_url || null,
+          created_at: data.created_at?.toDate()?.toISOString() || new Date().toISOString(),
+          updated_at: data.updated_at?.toDate()?.toISOString() || new Date().toISOString(),
+          // Create name property from first_name and last_name
+          name: data.first_name && data.last_name 
+            ? `${data.first_name} ${data.last_name}` 
+            : (data.first_name || data.last_name || 'Unknown User')
+        };
+      }) as Profile[];
       
       setPendingUsers(transformedData);
     } catch (error: any) {
@@ -77,16 +91,13 @@ const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
 
   const handleApproveUser = async (userId: string) => {
     try {
-      // Update the user profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          approved: true,
-          approval_pending: false
-        })
-        .eq('id', userId);
-      
-      if (error) throw error;
+      // Update the user profile in Firestore
+      const userRef = doc(db, 'profiles', userId);
+      await updateDoc(userRef, {
+        approved: true,
+        approval_pending: false,
+        updated_at: serverTimestamp(), // Update timestamp
+      });
       
       // Refresh the user list
       fetchPendingUsers();
@@ -109,16 +120,13 @@ const UserApprovalList = ({ departmentFilter }: UserApprovalListProps) => {
 
   const handleRejectUser = async (userId: string) => {
     try {
-      // Update the user profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          approved: false,
-          approval_pending: false
-        })
-        .eq('id', userId);
-      
-      if (error) throw error;
+      // Update the user profile in Firestore
+      const userRef = doc(db, 'profiles', userId);
+      await updateDoc(userRef, {
+        approved: false,
+        approval_pending: false,
+        updated_at: serverTimestamp(), // Update timestamp
+      });
       
       // Refresh the user list
       fetchPendingUsers();

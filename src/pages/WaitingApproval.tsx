@@ -3,7 +3,10 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client'; // Remove Supabase import
+import { db, auth } from '@/integrations/firebase/firebase'; // Import db and auth from Firebase
+import { doc, getDoc } from 'firebase/firestore'; // Import Firestore functions
+import { signOut } from 'firebase/auth'; // Import signOut from Firebase Auth
 import { Check, Clock, AlertCircle } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -32,31 +35,41 @@ const WaitingApproval = () => {
       return;
     }
 
-    // Check if user is approved
+    // Check if user is approved using Firebase
     const checkApprovalStatus = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('approved, approval_pending')
-          .eq('id', user.id)
-          .single();
+        if (!user?.uid) return; // Ensure user and uid exist
 
-        if (error) throw error;
+        const profileRef = doc(db, 'profiles', user.uid); // Assuming profile document ID is user's UID
+        const profileSnap = await getDoc(profileRef);
+
+        if (!profileSnap.exists()) {
+          console.error('No profile found for user:', user.uid);
+          // Handle case where profile doesn't exist (e.g., redirect to a profile creation page or logout)
+           await signOut(auth); // Sign out if profile is unexpectedly missing
+           navigate('/login');
+          return;
+        }
+
+        const profileData = profileSnap.data();
         
         // If user is approved, redirect them to their dashboard
-        if (data && data.approved) {
-          navigate(redirectBasedOnRole(user.role));
+        if (profileData && profileData.approved) {
+          // Assuming user.role is available in profileData
+          navigate(redirectBasedOnRole(profileData.role));
         }
         
         // If user is rejected (not pending and not approved)
-        if (data && !data.approval_pending && !data.approved) {
-          // User was rejected, log them out
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
+        if (profileData && !profileData.approval_pending && !profileData.approved) {
+          console.log("User was rejected, logging out");
+          await signOut(auth); // Use Firebase signOut
           navigate('/login');
         }
       } catch (error) {
         console.error('Error checking approval status:', error);
+         // Consider adding a toast notification for the error
+         await signOut(auth); // Optionally sign out on error
+         navigate('/login');
       }
     };
 
@@ -65,9 +78,10 @@ const WaitingApproval = () => {
     const interval = setInterval(checkApprovalStatus, 30000);
     
     return () => clearInterval(interval);
-  }, [user, navigate]);
+  }, [user, navigate]); // Added navigate to dependencies
 
-  // Get redirect path based on user role
+  // Get redirect path based on user role (This seems redundant with redirectBasedOnRole import)
+  // Keeping it for now, but you might want to remove this local function
   const getRedirectPath = (role: string) => {
     switch (role) {
       case 'hr': return '/hr';

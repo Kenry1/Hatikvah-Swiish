@@ -13,13 +13,16 @@ import QRCodeDownload from "@/components/QRCodeDownload";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { redirectBasedOnRole } from "@/utils/roleBasedRedirection";
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client"; // Removed Supabase import
+import { db } from "@/integrations/firebase/firebase"; // Import Firestore
+import { doc, getDoc } from "firebase/firestore"; // Import Firestore functions
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Loader2 } from "lucide-react"; // Import Loader2
 
 export default function Login() {
   const auth = useAuth();
-  const { signIn, signUp, user } = auth;
+  const { signIn, signUp, user, isLoading: isAuthLoading } = auth; // Get isAuthLoading from useAuth
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -29,73 +32,78 @@ export default function Login() {
   const [error, setError] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [isProfileLoading, setIsProfileLoading] = useState(true); // New state for profile loading
 
   // Current app URL for QR code
   const appUrl = window.location.origin;
 
   useEffect(() => {
-    // Check if user is already logged in when component mounts
-    const checkSession = async () => {
-      console.log("Checking for existing session");
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Error checking session:", error);
-      }
-      
-      if (data.session?.user) {
-        console.log("Found existing session for user:", data.session.user.id);
-        handleUserRedirection(data.session.user.id);
-      } else {
-        console.log("No existing session found");
-      }
-    };
-
-    checkSession();
-  }, []);
-
-  useEffect(() => {
+    // This useEffect now only handles redirection when the user state changes.
+    // The initial session check is handled by the useAuth hook.
     if (user) {
-      console.log("User state updated, redirecting user:", user.id);
-      handleUserRedirection(user.id);
+      console.log("User state updated, checking profile for user:", user.uid);
+      handleUserRedirection(user.uid);
+    } else if (!isAuthLoading) {
+        // If auth is not loading and there's no user, ensure profile loading is false
+        setIsProfileLoading(false);
     }
-  }, [user, navigate]);
+  }, [user, navigate, isAuthLoading]); // Added isAuthLoading dependency
 
   const handleUserRedirection = async (userId: string) => {
+    setIsProfileLoading(true);
     try {
       console.log("Checking profile status for user:", userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('approved, approval_pending')
-        .eq('id', userId)
-        .single();
+      const profileRef = doc(db, 'profiles', userId); // Assuming profile document ID is user's UID
+      const profileSnap = await getDoc(profileRef);
 
-      if (error) {
-        console.error('Error checking profile status:', error);
+      if (!profileSnap.exists()) {
+        console.error('No profile found for user:', userId);
+        // Handle case where profile doesn't exist (e.g., redirect to a profile creation page)
+        // For now, we might just stay on login or show an error
+         setIsProfileLoading(false);
+         // Optionally sign out the user if a profile is expected but not found
+         await auth.signOut();
+         setError("Profile not found. Please contact support or try signing up again.");
         return;
       }
+
+      const profileData = profileSnap.data();
+      console.log("Profile status:", profileData);
       
-      console.log("Profile status:", data);
-      
-      if (data) {
-        if (data.approval_pending) {
+      if (profileData) {
+        if (profileData.approval_pending) {
           console.log("User pending approval, redirecting to waiting approval page");
           navigate('/waiting-approval');
-        } else if (data.approved) {
-          // Explicitly cast user.role as UserRole if it exists, or provide a valid default
-          const userRole = (user?.role || 'technician') as UserRole;
+        } else if (profileData.approved) {
+          // Assuming user.role is available in the profileData
+          const userRole = profileData.role as UserRole; // Get role from profile data
           const redirectPath = redirectBasedOnRole(userRole);
           console.log(`User approved, redirecting to ${redirectPath} based on role ${userRole}`);
+          // Show success toast after successful login and redirection
+          toast({
+            title: "Login successful",
+            description: "Welcome back!",
+          });
           navigate(redirectPath);
         } else {
           // User was rejected, log them out
           console.log("User was rejected, logging out");
-          await auth.signOut();
+          await auth.signOut(); // Use Firebase signOut via useAuth
           setError("Your account has been rejected. Please contact support.");
         }
+      } else {
+           // Should not happen if profileSnap.exists() is true, but as a safeguard
+            console.error("Profile data is undefined.");
+             await auth.signOut();
+             setError("An error occurred while fetching profile data.");
       }
     } catch (err) {
       console.error('Error in user redirection:', err);
+       setError("An error occurred during login. Please try again.");
+        // Optionally sign out on error
+        await auth.signOut();
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
@@ -111,7 +119,7 @@ export default function Login() {
       console.log("Attempting to sign in user:", email);
       await signIn(email, password);
       console.log("Sign in successful");
-      // Success toast is handled after redirection
+      // Redirection and success toast are handled by the useEffect watching the user state
     } catch (error: any) {
       console.error("Login error:", error);
       setError("Invalid email or password. Please try again.");
@@ -154,6 +162,15 @@ export default function Login() {
     }
   };
   
+  // Show a loading indicator while authentication or profile is being checked
+  if (isAuthLoading || (user && isProfileLoading)) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row w-full bg-[#0f172a] text-white">
       {/* Left side - Login form */}

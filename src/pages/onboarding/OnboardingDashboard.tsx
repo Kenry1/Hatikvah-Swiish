@@ -2,7 +2,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client'; // Remove Supabase import
+import { auth, db } from '@/integrations/firebase/firebase'; // Import auth and db from your Firebase setup
+import { signOut } from 'firebase/auth'; // Import signOut from Firebase Auth
+import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Import Firestore functions
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -20,25 +23,30 @@ const OnboardingDashboard = () => {
       return;
     }
 
-    // Check if user is approved
+    // Check if user is approved using Firebase
     const checkApprovalStatus = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('approved, approval_pending')
-          .eq('id', user.id)
-          .single();
+        if (!user?.uid) return; // Ensure user and uid exist
 
-        if (error) throw error;
+        const profileRef = doc(db, 'profiles', user.uid); // Assuming profile document ID is user's UID
+        const profileSnap = await getDoc(profileRef);
+
+        if (!profileSnap.exists()) {
+          console.error('No profile found for user:', user.uid);
+          // Handle case where profile doesn't exist (e.g., redirect or show error)
+          return;
+        }
+
+        const profileData = profileSnap.data();
 
         // If approval is still pending, redirect to waiting page
-        if (data && data.approval_pending) {
+        if (profileData && profileData.approval_pending) {
           navigate('/waiting-approval');
         }
         
         // If user is rejected, sign them out
-        if (data && !data.approval_pending && !data.approved) {
-          await supabase.auth.signOut();
+        if (profileData && !profileData.approval_pending && !profileData.approved) {
+          await signOut(auth); // Use Firebase signOut
           navigate('/login');
         }
       } catch (error) {
@@ -50,17 +58,18 @@ const OnboardingDashboard = () => {
   }, [user, navigate]);
 
   const completeOnboarding = async () => {
-    if (!user) return;
+    if (!user?.uid) return; // Ensure user and uid exist
     
     try {
-      await supabase
-        .from('profiles')
-        .update({
-          onboarding_completed: true,
-          onboarding_step: 100
-        })
-        .eq('id', user.id);
+      const profileRef = doc(db, 'profiles', user.uid); // Reference to the user's profile document
+      await updateDoc(profileRef, { // Use Firestore updateDoc
+        onboarding_completed: true,
+        onboarding_step: 100
+      });
 
+      // Assuming user.role is available in the Auth context or profile data
+      // You might need to fetch the profile data here if user.role is not in Auth context
+      // For now, I'll assume user.role is available.
       navigate(`/${user.role}`);
     } catch (error) {
       console.error('Error completing onboarding:', error);
