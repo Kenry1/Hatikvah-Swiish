@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,8 +146,9 @@ export default function Login() {
       });
 
       // Immediately redirect to waiting approval page after signup
-      console.log("Redirecting to waiting approval page");
-      navigate('/waiting-approval');
+      console.log("No redirection after signup");
+      // navigate('/waiting-approval'); // Removed redirection
+
     } catch (error: any) {
       console.error("Registration error:", error);
       setError(error.message || "Failed to create account. Please try again.");
