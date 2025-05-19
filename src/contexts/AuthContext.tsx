@@ -65,8 +65,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           email: firebaseUser.email,
           name: name,
           role: role,
-          approval_pending: true, // New users are pending approval
-          approved: false,
+          approval_pending: false, // New users are directly approved
+          approved: true, // New users are directly approved
           created_at: serverTimestamp(),
         });
         // Redirection is now handled by the Login page based on the state
