@@ -70,10 +70,8 @@ export default function Login() {
       console.log("Profile status:", profileData);
       
       if (profileData) {
-        if (profileData.approval_pending) {
-          console.log("User pending approval, redirecting to waiting approval page");
-          navigate('/waiting-approval');
-        } else if (profileData.approved) {
+        // Directly check if approved, bypass pending check
+        if (profileData.approved) {
           // Assuming user.role is available in the profileData
           const userRole = profileData.role as UserRole; // Get role from profile data
           const redirectPath = redirectBasedOnRole(userRole);
@@ -85,10 +83,10 @@ export default function Login() {
           });
           navigate(redirectPath);
         } else {
-          // User was rejected, log them out
-          console.log("User was rejected, logging out");
+          // User was not approved, log them out
+          console.log("User was not approved, logging out");
           await auth.signOut(); // Use Firebase signOut via useAuth
-          setError("Your account has been rejected. Please contact support.");
+          setError("Your account is not approved. Please contact support.");
         }
       } else {
            // Should not happen if profileSnap.exists() is true, but as a safeguard
@@ -137,17 +135,17 @@ export default function Login() {
     setError("");
     try {
       console.log("Starting signup process for:", email, "with role:", role);
-      await signUp(email, password, role, name);
+      // When removing approval, new users should be marked as approved directly
+      await signUp(email, password, role, name); // Keep the sign-up logic as is for now, will adjust profile creation next
       
       console.log("Signup successful, showing success toast");
       toast({
         title: "Account created!",
-        description: "Your account is now pending approval by a department manager.",
+        description: "You can now log in.", // Updated message
       });
 
-      // Immediately redirect to waiting approval page after signup
+      // No redirection after signup, user stays on the login page to sign in
       console.log("No redirection after signup");
-      // navigate('/waiting-approval'); // Removed redirection
 
     } catch (error: any) {
       console.error("Registration error:", error);

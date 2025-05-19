@@ -23,7 +23,7 @@ const OnboardingDashboard = () => {
       return;
     }
 
-    // Check if user is approved using Firebase
+    // Check if user is rejected using Firebase
     const checkApprovalStatus = async () => {
       try {
         if (!user?.uid) return; // Ensure user and uid exist
@@ -39,11 +39,6 @@ const OnboardingDashboard = () => {
 
         const profileData = profileSnap.data();
 
-        // If approval is still pending, redirect to waiting page
-        if (profileData && profileData.approval_pending) {
-          navigate('/waiting-approval');
-        }
-        
         // If user is rejected, sign them out
         if (profileData && !profileData.approval_pending && !profileData.approved) {
           await signOut(auth); // Use Firebase signOut
@@ -55,6 +50,7 @@ const OnboardingDashboard = () => {
     };
 
     checkApprovalStatus();
+    // Removed interval check for approval as the waiting page is removed
   }, [user, navigate]);
 
   const completeOnboarding = async () => {
@@ -70,7 +66,18 @@ const OnboardingDashboard = () => {
       // Assuming user.role is available in the Auth context or profile data
       // You might need to fetch the profile data here if user.role is not in Auth context
       // For now, I'll assume user.role is available.
-      navigate(`/${user.role}`);
+      // Fetch profile data to get the role after completing onboarding
+      const profileSnap = await getDoc(doc(db, 'profiles', user.uid));
+      const profileData = profileSnap.data();
+      
+      if (profileData && profileData.role) {
+         navigate(`/${profileData.role}`);
+      } else {
+         console.error("Profile data or role not found after completing onboarding.");
+         // Fallback to a default route or show an error
+         navigate('/'); // Redirect to home/login or a generic dashboard
+      }
+
     } catch (error) {
       console.error('Error completing onboarding:', error);
     }
