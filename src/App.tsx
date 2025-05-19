@@ -1,7 +1,7 @@
-
 import { BrowserRouter, Routes, Route, useRoutes } from 'react-router-dom';
 import { AppProviders } from './components/AppProviders';
 import * as routes from './routes';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Component to render all routes
 const AppRoutes = () => {
@@ -74,11 +74,13 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <AppProviders>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AppProviders>
+    <ErrorBoundary>
+      <AppProviders>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AppProviders>
+    </ErrorBoundary>
   );
 };
 

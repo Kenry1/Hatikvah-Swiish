@@ -31,7 +31,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const { role } = docSnap.data() as { role: string | undefined };
+      const data = docSnap.data() as { role: string | undefined };
+      const role = data?.role;
 
       if (!role) {
         console.warn("No role found for user. Redirecting to general dashboard.");
@@ -97,10 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      if (firebaseUser) {
-        redirectToRoleDashboard(firebaseUser.uid);
-      }
+      redirectToRoleDashboard(userCredential.user.uid);
     } catch (error: any) {
       console.error("Error during sign-in:", error);
       // Handle error appropriately, e.g., display an error message to the user
@@ -111,17 +109,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUp = async (email: string, password: string, role: UserRole, name: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      if (firebaseUser) {
-        await setDoc(doc(db, "profiles", firebaseUser.uid), {
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: name,
-          role: role,
-          created_at: serverTimestamp(),
-        });
-        redirectToRoleDashboard(firebaseUser.uid);
-      }
+      await setDoc(doc(db, "profiles", userCredential.user.uid), {
+        id: userCredential.user.uid,
+        email: userCredential.user.email,
+        name: name,
+        role: role,
+        created_at: serverTimestamp(),
+      });
+      redirectToRoleDashboard(userCredential.user.uid);
     } catch (error: any) {
       console.error("Error during sign-up:", error);
       // Handle error appropriately, e.g., display an error message to the user
@@ -130,7 +125,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
+    try {
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+      console.error("Error during sign-out:", error);
+      // Handle error appropriately, e.g., display an error message to the user
+    }
   };
 
   return (
