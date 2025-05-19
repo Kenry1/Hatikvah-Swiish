@@ -1,14 +1,14 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, Auth, getAuth } from "firebase/auth";
-import { User, UserRole } from "../types"; // Assuming you still have your User type
-import { db } from "@/integrations/firebase/firebase"; // Import the initialized Firebase app and db
-import { doc, setDoc, serverTimestamp } from "firebase/firestore"; // Import Firestore functions
+import { User, UserRole } from "../types";
+import { db } from "@/integrations/firebase/firebase";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
-// Removed getAuth(app) as db is already imported from firebase.ts
-const auth = getAuth(); // Initialize Firebase Auth using the default app
+const auth = getAuth();
 
 interface AuthContextType {
-  user: FirebaseUser | null; // Use Firebase's User type
+  user: FirebaseUser | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
@@ -24,45 +24,115 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const redirectToRoleDashboard = async (uid: string) => {
+    const docRef = doc(db, "profiles", uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const { role } = docSnap.data() as { role: string | undefined };
+
+      if (!role) {
+        console.warn("No role found for user. Redirecting to general dashboard.");
+        navigate("/dashboard/general");
+        return;
+      }
+
+      switch (role.toLowerCase()) {
+        case "hr":
+          navigate("/dashboard/hr");
+          break;
+        case "it":
+          navigate("/dashboard/it");
+          break;
+        case "technician":
+          navigate("/dashboard/technician");
+          break;
+        case "warehouse":
+          navigate("/dashboard/warehouse");
+          break;
+        case "logistics":
+          navigate("/dashboard/logistics");
+          break;
+        case "implementation_manager":
+          navigate("/dashboard/implementation_manager");
+          break;
+        case "project_manager":
+          navigate("/dashboard/project_manager");
+          break;
+        case "planning":
+          navigate("/dashboard/planning");
+          break;
+        case "finance":
+          navigate("/dashboard/finance");
+          break;
+        case "management":
+          navigate("/dashboard/management");
+          break;
+        case "ehs":
+          navigate("/dashboard/ehs");
+          break;
+        case "procurement":
+          navigate("/dashboard/procurement");
+          break;
+        default:
+          navigate("/dashboard/general");
+          break;
+      }
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setIsLoading(false);
+      if (firebaseUser) {
+        redirectToRoleDashboard(firebaseUser.uid);
+      }
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []);
+    return () => unsubscribe();
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      if (firebaseUser) {
+        redirectToRoleDashboard(firebaseUser.uid);
+      }
+    } catch (error: any) {
+      console.error("Error during sign-in:", error);
+      // Handle error appropriately, e.g., display an error message to the user
+      throw error; // Re-throw the error to be caught by the LoginForm
+    }
   };
 
   const signUp = async (email: string, password: string, role: UserRole, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const firebaseUser = userCredential.user;
-
-    if (firebaseUser) {
-      // Create a profile document in Firestore
-      await setDoc(doc(db, "profiles", firebaseUser.uid), {
-        id: firebaseUser.uid, // Store UID as 'id' field
-        email: firebaseUser.email, // Store email
-        name: name,
-        role: role,
-        approved: false, // New users are initially not approved
-        approval_pending: true, // New users are initially pending approval
-        onboarding_completed: false, // New users haven't completed onboarding
-        onboarding_step: 0, // Start at step 0
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-        // Add other profile fields as needed (e.g., first_name, last_name, department, position, hire_date, avatar_url)
-      });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      if (firebaseUser) {
+        await setDoc(doc(db, "profiles", firebaseUser.uid), {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: name,
+          role: role,
+          created_at: serverTimestamp(),
+        });
+        redirectToRoleDashboard(firebaseUser.uid);
+      }
+    } catch (error: any) {
+      console.error("Error during sign-up:", error);
+      // Handle error appropriately, e.g., display an error message to the user
+      throw error; // Re-throw the error to be caught by the SignUpForm
     }
   };
 
   const signOut = async () => {
     await firebaseSignOut(auth);
   };
-  
+
   return (
     <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
       {children}

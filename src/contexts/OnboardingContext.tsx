@@ -250,9 +250,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         };
        setProgress(prev => [...prev, newProgressItem]);
 
-      // Refresh progress from Firestore after adding
-      await fetchUserProgress();
-      
     } catch (error) {
       console.error('Error starting task:', error);
        // Revert local state if Firestore update fails (optional but good practice)
@@ -311,9 +308,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         description: "Your task has been marked as completed.",
       });
 
-      // Refresh progress from Firestore after updating
-      await fetchUserProgress();
-      
     } catch (error: any) {
       console.error('Error completing task:', error);
       toast({
@@ -359,9 +353,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       );
       setProgress(updatedProgress);
       
-      // Refresh progress from Firestore after updating
-      await fetchUserProgress();
-      
       // Show success toast
       toast({
         title: "Task Updated",
@@ -376,19 +367,25 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       });
        // Revert local state if Firestore update fails (optional)
         await fetchUserProgress(); // Fetch the actual state from Firestore
-    }
+    } 
   };
 
   // Initial data loading
   useEffect(() => {
     if (user) {
-      setLoading(true);
-      // Fetch profile first, as it's needed for fetching tasks based on department
+ setProfile(null); // Clear profile state when user changes, before fetching new one
+ setLoading(true);
+      // Fetch profile first
       fetchUserProfile()
-        .then(() => Promise.all([
-          fetchOnboardingTasks(),
-          fetchUserProgress(),
-        ]))
+        .then((profileData) => { // Get profile data from fetchUserProfile
+ if (profileData) { // Only fetch tasks and progress if profile data is available
+ return Promise.all([
+ fetchOnboardingTasks(), // fetchOnboardingTasks now relies on the profile state updated by fetchUserProfile
+ fetchUserProgress(),
+ ]);
+ }
+ return Promise.resolve(); // If no profile, resolve immediately
+        })
         .catch((error) => console.error('Error during initial data fetch:', error))
         .finally(() => {
           setLoading(false);
@@ -399,7 +396,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       setProgress([]);
        setLoading(false); // Ensure loading is set to false when no user
     }
-  }, [user, fetchUserProfile, fetchOnboardingTasks, fetchUserProgress]); // Add dependencies
+  }, [user, fetchUserProfile, fetchUserProgress]); // Keep user, fetchUserProfile, and fetchUserProgress as dependencies
 
   const value = {
     profile,
