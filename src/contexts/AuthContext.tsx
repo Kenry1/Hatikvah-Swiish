@@ -26,94 +26,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const redirectToRoleDashboard = async (uid: string) => {
-    const docRef = doc(db, "profiles", uid);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data() as { role: string | undefined, approval_pending?: boolean, approved?: boolean }; // Added approval_pending and approved types
-      const role = data?.role;
-      const approvalPending = data?.approval_pending;
-      const approved = data?.approved;
-
-      if (approvalPending) {
-        console.log("User pending approval, redirecting to waiting approval page");
-        navigate('/waiting-approval');
-      } else if (approved) {
-         if (!role) {
-           console.warn("No role found for approved user. Redirecting to general dashboard.");
-           navigate("/dashboard/general");
-           return;
-         }
-        switch (role.toLowerCase()) {
-          case "hr":
-            navigate("/dashboard/hr");
-            break;
-          case "it":
-            navigate("/dashboard/it");
-            break;
-          case "technician":
-            navigate("/dashboard/technician");
-            break;
-          case "warehouse":
-            navigate("/dashboard/warehouse");
-            break;
-          case "logistics":
-            navigate("/dashboard/logistics");
-            break;
-          case "implementation_manager":
-            navigate("/dashboard/implementation_manager");
-            break;
-          case "project_manager":
-            navigate("/dashboard/project_manager");
-            break;
-          case "planning":
-            navigate("/dashboard/planning");
-            break;
-          case "finance":
-            navigate("/dashboard/finance");
-            break;
-          case "management":
-            navigate("/dashboard/management");
-            break;
-          case "ehs":
-            navigate("/dashboard/ehs");
-            break;
-          case "procurement":
-            navigate("/dashboard/procurement");
-            break;
-          default:
-            navigate("/dashboard/general");
-            break;
-        }
-      } else {
-         // User was rejected or in an unknown state, log them out or show error
-         console.log("User was rejected or in unknown profile state.");
-         // Optionally sign out or show an error message on the login page
-         navigate('/login'); // Redirect back to login
-      }
-    } else {
-      // No profile exists, redirect to a profile creation/onboarding page or handle as needed
-      console.log("No profile found for user, redirecting to initial setup.");
-      // Depending on your flow, you might redirect to a page to create the profile
-      // For now, let's just log a warning, as the login page should handle missing profiles
-       console.warn("Profile document does not exist for user:", uid);
-        // We won't redirect here, letting the Login page handle the absence of a profile initially.
-        // The Login page will detect no profile and can show an error or redirect to signup if needed.
-    }
-  };
+  // The redirection logic based on profile data is now handled in the Login page's useEffect
+  // const redirectToRoleDashboard = async (uid: string) => { ... };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setIsLoading(false);
-      // Redirection logic is now handled in the Login page based on user and profile state
-      // if (firebaseUser) {
-      //   redirectToRoleDashboard(firebaseUser.uid);
-      // }
+      // The Login page's useEffect now handles redirection based on user and profile state
     });
     return () => unsubscribe();
-  }, []); // Removed navigate dependency as redirection is not happening here anymore
+  }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -121,24 +44,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const firebaseUser = userCredential.user;
 
       if (firebaseUser) {
-        const profileRef = doc(db, "profiles", firebaseUser.uid);
-        const profileSnap = await getDoc(profileRef);
-
-        if (!profileSnap.exists()) {
-          console.log("No profile found after sign-in, creating a basic one.");
-          // Create a basic profile if it doesn't exist
-          await setDoc(profileRef, {
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            role: "user", // Assign a default role
-            approval_pending: true, // Default to pending approval
-            approved: false,
-            created_at: serverTimestamp(),
-          });
-        }
-        // Redirection is now handled by the Login page based on the state
-        // redirectToRoleDashboard(firebaseUser.uid);
+        // Profile existence check and creation logic moved out of AuthContext
+        // The Login page is responsible for fetching the profile and handling its absence.
       }
+      // No explicit redirection here; the Login page handles it based on state changes
+
     } catch (error: any) {
       console.error("Error during sign-in:", error);
       throw error; // Re-throw the error to be caught by the LoginForm
