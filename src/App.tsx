@@ -75,7 +75,7 @@ const AppRoutes = () => {
 const App = () => {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
         <AppProviders>
           <AppRoutes />
         </AppProviders>
