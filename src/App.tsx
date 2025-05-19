@@ -75,11 +75,11 @@ const AppRoutes = () => {
 const App = () => {
   return (
     <ErrorBoundary>
-      <AppProviders>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AppProviders>
           <AppRoutes />
-        </BrowserRouter>
-      </AppProviders>
+        </AppProviders>
+      </BrowserRouter>
     </ErrorBoundary>
   );
 };
