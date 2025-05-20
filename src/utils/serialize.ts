@@ -1,21 +1,22 @@
-export const serializeData = (data: any): string | null => {
-  try {
-    // Attempt to serialize the data using JSON.stringify
-    return JSON.stringify(data);
-  } catch (error) {
-    // Log the error if serialization fails (e.g., circular references)
-    console.error("Failed to serialize data:", error);
-    return null;
-  }
-};
+import { Timestamp } from "firebase/firestore";
 
-export const deserializeData = (dataString: string): any | null => {
-  try {
-    // Attempt to deserialize the data using JSON.parse
-    return JSON.parse(dataString);
-  } catch (error) {
-    // Log the error if deserialization fails (e.g., invalid JSON)
-    console.error("Failed to deserialize data:", error);
-    return null;
+export const serialize = (obj: any): any => {
+  if (obj === null || obj === undefined) {
+    return obj;
   }
+
+  if (obj instanceof Timestamp) {
+    return {
+      seconds: obj.seconds,
+      nanoseconds: obj.nanoseconds,
+    };
+  }
+
+  if (typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [key, serialize(value)])
+    );
+  }
+
+  return obj;
 };

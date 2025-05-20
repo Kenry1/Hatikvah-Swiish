@@ -4,6 +4,7 @@ import { User, UserRole } from "../types";
 import { db } from "@/integrations/firebase/firebase";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { serialize } from "../utils/serialize";
 
 const auth = getAuth();
 
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       if (firebaseUser) {
-        await setDoc(doc(db, "profiles", firebaseUser.uid), {
+        const profileData = serialize({
           id: firebaseUser.uid,
           email: firebaseUser.email,
           name: name,
@@ -69,8 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           approved: true, // New users are directly approved
           created_at: serverTimestamp(),
         });
-        // Redirection is now handled by the Login page based on the state
-        // redirectToRoleDashboard(firebaseUser.uid);
+        await setDoc(doc(db, "profiles", firebaseUser.uid), profileData);
       }
     } catch (error: any) {
       console.error("Error during sign-up:", error);

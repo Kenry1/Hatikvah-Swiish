@@ -18,6 +18,7 @@ import { doc, getDoc } from "firebase/firestore"; // Import Firestore functions
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Loader2 } from "lucide-react"; // Import Loader2
+import { serialize } from "../utils/serialize";
 
 export default function Login() {
   const auth = useAuth();
@@ -66,7 +67,7 @@ export default function Login() {
         return;
       }
 
-      const profileData = profileSnap.data();
+      const profileData = serialize(profileSnap.data());
       console.log("Profile status:", profileData);
       
       if (profileData) {
@@ -97,8 +98,8 @@ export default function Login() {
     } catch (err) {
       console.error('Error in user redirection:', err);
        setError("An error occurred during login. Please try again.");
-        // Optionally sign out on error
-        await auth.signOut();
+      // Optionally sign out on error
+      await auth.signOut();
     } finally {
       setIsProfileLoading(false);
     }

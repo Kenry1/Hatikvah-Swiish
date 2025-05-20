@@ -1,11 +1,11 @@
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
-// import { supabase } from '@/integrations/supabase/client'; // Remove Supabase import
 import { db } from '@/integrations/firebase/firebase'; // Import Firestore
-import { doc, getDoc, updateDoc, collection, query, where, addDoc, deleteDoc } from 'firebase/firestore'; // Import necessary Firestore functions
+import { doc, getDoc, updateDoc, collection, query, where, addDoc, deleteDoc, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions, including getDocs
 import { useAuth } from '@/contexts/AuthContext';
 import { Profile, OnboardingTask, UserOnboardingProgress, DepartmentType } from '@/types/onboarding';
 import { toast } from '@/hooks/use-toast';
 import { serverTimestamp } from 'firebase/firestore';
+import { serialize } from '../utils/serialize'; // Import serialize
 
 interface OnboardingContextProps {
   profile: Profile | null;
@@ -25,58 +25,12 @@ interface OnboardingContextProps {
 
 const OnboardingContext = createContext<OnboardingContextProps | undefined>(undefined);
 
-// Mock data for development (will be replaced with Firebase fetches)
-const mockTasks: OnboardingTask[] = [
-  {
-    id: '1',
-    department: 'engineering',
-    title: 'Complete company orientation',
-    description: 'Learn about company history, values, and policies',
-    estimated_time: '2 hours',
-    sequence_order: 1,
-    is_required: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    department: 'engineering',
-    title: 'Set up development environment',
-    description: 'Install necessary tools and gain access to repositories',
-    estimated_time: '3 hours',
-    sequence_order: 2,
-    is_required: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '3',
-    department: 'engineering',
-    title: 'Meet with team members',
-    description: 'Schedule 1:1 meetings with each team member',
-    estimated_time: '1 hour',
-    sequence_order: 3,
-    is_required: false,
-    created_at: new Date().toISOString()
-  }
-];
-
-const mockProgress: UserOnboardingProgress[] = [
-  {
-    id: '1',
-    user_id: '1',
-    task_id: '1',
-    completed: true,
-    completed_at: new Date().toISOString(),
-    notes: 'Completed orientation with HR',
-    created_at: new Date().toISOString()
-  }
-];
-
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [tasks, setTasks] = useState<OnboardingTask[]>(mockTasks); // Using mock data initially
-  const [progress, setProgress] = useState<UserOnboardingProgress[]>(mockProgress); // Using mock data initially
+  const [tasks, setTasks] = useState<OnboardingTask[]>([]); // Initialize with empty array
+  const [progress, setProgress] = useState<UserOnboardingProgress[]>([]); // Initialize with empty array
 
   // Fetch the user profile from Firestore
   const fetchUserProfile = useCallback(async () => {
@@ -129,10 +83,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       const profileRef = doc(db, 'profiles', user.uid);
-      await updateDoc(profileRef, {
+      const serializedData = serialize({
         ...data,
-        updated_at: serverTimestamp(), // Update timestamp on change
+        updated_at: serverTimestamp(),
       });
+      await updateDoc(profileRef, serializedData);
 
       // Update local state after successful Firestore update
       setProfile({ ...profile, ...data });
@@ -168,37 +123,31 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     await updateProfile({ onboarding_completed: true, onboarding_step: 100 }); // Assuming 100 means completed
   };
 
-  // Fetch onboarding tasks from Firestore (replace mock data logic)
+  // Fetch onboarding tasks from Firestore
   const fetchOnboardingTasks = useCallback(async () => {
     try {
-      // We now rely on the profile state being set by fetchUserProfile in the effect
       if (!profile || !profile.department) {
-         // If no profile or department, clear tasks and return
         setTasks([]);
         return;
       }
 
       console.log('Fetching onboarding tasks for department:', profile.department);
-      // TODO: Implement fetching tasks from Firestore based on profile.department
-      // Example: const tasksColRef = collection(db, 'onboarding_tasks');
-      // const q = query(tasksColRef, where('department', '==', profile.department));
-      // const querySnapshot = await getDocs(q);
-      // const fetchedTasks = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as OnboardingTask }));
-      // setTasks(fetchedTasks);
-
-      // For now, continue using filtered mock tasks
-      const filteredTasks = mockTasks.filter(
-        task => task.department === profile.department
-      );
-      setTasks(filteredTasks);
+      const tasksColRef = collection(db, 'onboarding_tasks');
+      const q = query(tasksColRef, where('department', '==', profile.department));
+      const querySnapshot = await getDocs(q);
+      const fetchedTasks = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data() as OnboardingTask
+      }));
+      setTasks(fetchedTasks);
 
     } catch (error) {
       console.error('Error fetching tasks:', error);
-       setTasks([]); // Clear tasks on error
+      setTasks([]); // Clear tasks on error
     }
   }, [profile]); // Dependency: profile
 
-  // Fetch user progress from Firestore (replace mock data logic)
+  // Fetch user progress from Firestore
   const fetchUserProgress = useCallback(async () => {
     try {
       if (!user?.uid) {
@@ -206,15 +155,14 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         return;
       }
       console.log('Fetching user progress for user:', user.uid);
-      // TODO: Implement fetching user progress from Firestore
-      // Example: const progressColRef = collection(db, 'user_onboarding_progress');
-      // const q = query(progressColRef, where('user_id', '==', user.uid));
-      // const querySnapshot = await getDocs(q);
-      // const fetchedProgress = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as UserOnboardingProgress }));
-      // setProgress(fetchedProgress);
-
-      // For now, continue using mock progress data (consider filtering by user.id if mock data had more users)
-       setProgress(mockProgress); // Using mock data initially
+      const progressColRef = collection(db, 'user_onboarding_progress');
+      const q = query(progressColRef, where('user_id', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      const fetchedProgress = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data() as UserOnboardingProgress
+      }));
+      setProgress(fetchedProgress);
 
     } catch (error) {
       console.error('Error fetching user progress:', error);
@@ -222,46 +170,41 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   }, [user]); // Dependency: user
 
-  // Start a task in Firestore (replace mock data logic)
+  // Start a task in Firestore
   const startTask = async (taskId: string) => {
     try {
       if (!user?.uid) return;
 
-      // Check if progress already exists locally (for immediate UI update)
+      // Check if progress already exists in state
       const existingProgress = progress.find(p => p.task_id === taskId && p.user_id === user.uid);
-      if (existingProgress) return; // Progress already exists, no need to create
+      if (existingProgress) {
+         console.log(`Progress for task ${taskId} already exists.`);
+         return; // Progress already exists, no need to create
+      }
 
       console.log(`Starting task ${taskId} for user ${user.uid} in Firestore...`);
-      // TODO: Implement creating user onboarding progress document in Firestore
-      // Example: await addDoc(collection(db, 'user_onboarding_progress'), {
-      //   user_id: user.uid,
-      //   task_id: taskId,
-      //   completed: false,
-      //   created_at: serverTimestamp(),
-      //   // Add other relevant fields
-      // });
+      const newProgressData = serialize({
+        user_id: user.uid,
+        task_id: taskId,
+        completed: false,
+        created_at: serverTimestamp(),
+      });
+      await addDoc(collection(db, 'user_onboarding_progress'), newProgressData);
 
-       // Optimistically update local state (will be overridden by fetchUserProgress later)
-       const newProgressItem = { // Create a temporary ID
-            id: `${taskId}-${user.uid}-${Date.now()}`,
-            user_id: user.uid,
-            task_id: taskId,
-            completed: false,
-            completed_at: null,
-            notes: null,
-            created_at: new Date().toISOString(), // Use current date for local state
-            // task: {} as OnboardingTask // You might need to fetch or include task details
-        };
-       setProgress(prev => [...prev, newProgressItem]);
+      // After creating, refetch progress to update state
+      await fetchUserProgress();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting task:', error);
-       // Revert local state if Firestore update fails (optional but good practice)
-       setProgress(prev => prev.filter(p => p.task_id !== taskId || p.user_id !== user.uid || p.completed !== false)); // Basic revert
+       toast({
+        title: "Failed to Start Task",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
     }
   };
 
-  // Complete a task in Firestore (replace mock data logic)
+  // Complete a task in Firestore
   const completeTask = async (taskId: string, notes?: string) => {
     try {
       if (!user?.uid) return;
@@ -272,39 +215,30 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
        if (!progressItem) {
             // If progress item doesn't exist, create it and mark as completed
             console.log(`Progress for task ${taskId} not found, creating and completing.`);
-             // TODO: Implement creating a completed progress document in Firestore
-             // Example: await addDoc(collection(db, 'user_onboarding_progress'), {
-             //   user_id: user.uid,
-             //   task_id: taskId,
-             //   completed: true,
-             //   completed_at: serverTimestamp(),
-             //   notes: notes || null,
-             //   created_at: serverTimestamp(),
-             // });
+             const newCompletedProgressData = serialize({
+               user_id: user.uid,
+               task_id: taskId,
+               completed: true,
+               completed_at: serverTimestamp(),
+               notes: notes || null,
+               created_at: serverTimestamp(),
+             });
+             await addDoc(collection(db, 'user_onboarding_progress'), newCompletedProgressData);
         } else {
              // If progress item exists, update it
             console.log(`Completing task ${taskId} for user ${user.uid} in Firestore...`);
-            // TODO: Implement updating user onboarding progress document in Firestore
-            // Example: const progressDocRef = doc(db, 'user_onboarding_progress', progressItem.id); // Assuming progressItem.id is the Firestore doc ID
-            // await updateDoc(progressDocRef, {
-            //   completed: true,
-            //   completed_at: serverTimestamp(),
-            //   notes: notes || null,
-            // });
+            const updatedProgressData = serialize({
+              completed: true,
+              completed_at: serverTimestamp(),
+              notes: notes || null,
+            });
+            // Assuming progressItem.id is the Firestore doc ID
+            const progressDocRef = doc(db, 'user_onboarding_progress', progressItem.id);
+            await updateDoc(progressDocRef, updatedProgressData);
         }
 
-      // Optimistically update local state
-      const updatedProgress = progress.map(p =>
-        p.task_id === taskId && p.user_id === user.uid
-          ? {
-              ...p,
-              completed: true,
-              completed_at: new Date().toISOString(), // Use current date for local state
-              notes: notes || p.notes
-            }
-          : p
-      );
-      setProgress(updatedProgress);
+      // After completing/creating, refetch progress to update state
+      await fetchUserProgress();
 
       // Show success toast
       toast({
@@ -320,11 +254,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
        // Revert local state if Firestore update fails (optional)
-        await fetchUserProgress(); // Fetch the actual state from Firestore
+        // await fetchUserProgress(); // This is already done after successful update
     }
   };
 
-  // Uncomplete a task in Firestore (replace mock data logic)
+  // Uncomplete a task in Firestore
   const uncompleteTask = async (taskId: string) => {
     try {
       if (!user?.uid) return;
@@ -338,24 +272,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
        }
 
       console.log(`Uncompleting task ${taskId} for user ${user.uid} in Firestore...`);
-      // TODO: Implement updating user onboarding progress document in Firestore to mark as incomplete
-      // Example: const progressDocRef = doc(db, 'user_onboarding_progress', progressItem.id); // Assuming progressItem.id is the Firestore doc ID
-      // await updateDoc(progressDocRef, {
-      //   completed: false,
-      //   completed_at: null,
-      // });
+      const updatedProgressData = serialize({
+        completed: false,
+        completed_at: null,
+      });
+      const progressDocRef = doc(db, 'user_onboarding_progress', progressItem.id); // Assuming progressItem.id is the Firestore doc ID
+      await updateDoc(progressDocRef, updatedProgressData);
 
-      // Optimistically update local state
-      const updatedProgress = progress.map(p =>
-        p.task_id === taskId && p.user_id === user.uid
-          ? {
-              ...p,
-              completed: false,
-              completed_at: null
-            }
-          : p
-      );
-      setProgress(updatedProgress);
+      // After updating, refetch progress to update state
+      await fetchUserProgress();
 
       // Show success toast
       toast({
@@ -370,7 +295,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
        // Revert local state if Firestore update fails (optional)
-        await fetchUserProgress(); // Fetch the actual state from Firestore
+        // await fetchUserProgress(); // This is already done after successful update
     }
   };
 
