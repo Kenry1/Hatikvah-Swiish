@@ -1,4 +1,3 @@
-
 import { RouteObject } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import TechnicianDashboard from '@/pages/technician/TechnicianDashboard';
@@ -10,7 +9,7 @@ import TechnicianSettings from '@/pages/technician/TechnicianSettings';
 
 export const technicianRoutes: RouteObject[] = [
   {
-    path: '/technician',
+    path: '/technician/dashboard',
     element: (
       <ProtectedRoute allowedRoles={['technician']}>
         <TechnicianDashboard />

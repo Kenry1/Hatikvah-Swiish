@@ -1,5 +1,5 @@
 import { RouteObject } from 'react-router-dom';
-import Login from '@/pages/Login';
+import Login from '@/components/auth/Login';
 import NotFound from '@/pages/NotFound';
 
 export const publicRoutes: RouteObject[] = [

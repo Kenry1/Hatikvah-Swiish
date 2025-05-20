@@ -1,32 +1,31 @@
-
 import { UserRole } from "@/types";
 
 export const redirectBasedOnRole = (role: UserRole): string => {
   switch (role) {
     case 'technician':
-      return '/technician';
+      return '/technician/dashboard';
     case 'warehouse':
-      return '/warehouse';
+      return '/warehouse/dashboard';
     case 'logistics':
-      return '/logistics';
+      return '/logistics/dashboard';
     case 'hr':
-      return '/hr';
+      return '/hr/dashboard';
     case 'implementation_manager':
-      return '/implementation-manager';
+      return '/implementation-manager/dashboard';
     case 'project_manager':
-      return '/project-manager';
+      return '/project-manager/dashboard';
     case 'planning':
-      return '/planning';
+      return '/planning/dashboard';
     case 'it':
-      return '/it';
+      return '/it/dashboard';
     case 'finance':
-      return '/finance';
+      return '/finance/dashboard';
     case 'management':
-      return '/management';
+      return '/management/dashboard';
     case 'ehs':
-      return '/ehs';
+      return '/ehs/dashboard';
     case 'procurement':
-      return '/procurement';
+      return '/procurement/dashboard';
     default:
       return '/';
   }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,29 +30,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     // Redirect to the appropriate dashboard based on their role
     switch (user.role) {
       case 'technician':
-        return <Navigate to="/technician" replace />;
+        return <Navigate to="/technician/dashboard" replace />;
       case 'warehouse':
-        return <Navigate to="/warehouse" replace />;
+        return <Navigate to="/warehouse/dashboard" replace />;
       case 'logistics':
-        return <Navigate to="/logistics" replace />;
+        return <Navigate to="/logistics/dashboard" replace />;
       case 'hr':
-        return <Navigate to="/hr" replace />;
+        return <Navigate to="/hr/dashboard" replace />;
       case 'implementation_manager':
-        return <Navigate to="/implementation-manager" replace />;
+        return <Navigate to="/implementation-manager/dashboard" replace />;
       case 'project_manager':
-        return <Navigate to="/project-manager" replace />;
+        return <Navigate to="/project-manager/dashboard" replace />;
       case 'planning':
-        return <Navigate to="/planning" replace />;
+        return <Navigate to="/planning/dashboard" replace />;
       case 'it':
-        return <Navigate to="/it" replace />;
+        return <Navigate to="/it/dashboard" replace />;
       case 'finance':
-        return <Navigate to="/finance" replace />;
+        return <Navigate to="/finance/dashboard" replace />;
       case 'management':
-        return <Navigate to="/management" replace />;
+        return <Navigate to="/management/dashboard" replace />;
       case 'ehs':
-        return <Navigate to="/ehs" replace />;
+        return <Navigate to="/ehs/dashboard" replace />;
       case 'procurement':
-        return <Navigate to="/procurement" replace />;
+        return <Navigate to="/procurement/dashboard" replace />;
       default:
         return <Navigate to="/login" replace />;
     }
