@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRequestWorkflow } from '@/contexts/RequestWorkflowContext'; // Import the context hook
 import { Fuel, Car, Package, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TechnicianSidebar } from '@/components/technician/TechnicianSidebar';
@@ -10,7 +11,15 @@ import { SidebarInset } from '@/components/ui/sidebar';
 
 const TechnicianDashboard = () => {
   const { user } = useAuth();
+  const { refreshRequests } = useRequestWorkflow(); // Use the context hook
   const navigate = useNavigate();
+
+  // Fetch requests when the component mounts and user is available
+  useEffect(() => {
+    if (user) {
+      refreshRequests();
+    }
+  }, [user, refreshRequests]); // Add user and refreshRequests as dependencies
   
   return (
     <DashboardLayout sidebar={<TechnicianSidebar />}>

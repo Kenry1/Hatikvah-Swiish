@@ -1,13 +1,25 @@
 
+import React, { useEffect } from 'react';
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
 import PendingApprovals from '@/components/project_manager/PendingApprovals';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ClipboardCheck, Users, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useRequestWorkflow } from '@/contexts/RequestWorkflowContext'; // Import the context hook
+import { useAuth } from '@/contexts/AuthContext'; // Import AuthContext
 
 const PMDashboard = () => {
   const navigate = useNavigate();
+  const { refreshRequests } = useRequestWorkflow(); // Use the context hook
+  const { user } = useAuth(); // Use AuthContext
+
+  // Fetch requests when the component mounts and user is available
+  useEffect(() => {
+    if (user) {
+      refreshRequests();
+    }
+  }, [user, refreshRequests]); // Add user and refreshRequests as dependencies
   
   const quickLinks = [
     { title: "Request Approvals", icon: <ClipboardCheck className="h-5 w-5" />, path: "/project-manager/approvals" },

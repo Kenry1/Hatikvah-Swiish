@@ -1,7 +1,7 @@
 
 import { RouteObject } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import ITDashboard from '@/pages/it/ITDashboard';
+import ITDashboard from '@/components/it/ITDashboard';
 
 export const itRoutes: RouteObject[] = [
   {

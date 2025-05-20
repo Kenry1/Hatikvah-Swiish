@@ -54,12 +54,11 @@ export function RequestWorkflowProvider({ children }: { children: ReactNode }) {
   const [approvedRequests, setApprovedRequests] = useState<RequestReport[]>([]);
   const [loadingRequests, setLoadingRequests] = useState<boolean>(true);
 
-  // Fetch all request types based on user role
+  // Fetch all request types based on user role - Removed user dependency
   useEffect(() => {
-    if (user) {
-      fetchRequests();
-    }
-  }, [user]);
+    // Requests will now be fetched when refreshRequests is called
+    // fetchRequests(); 
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const fetchRequests = async () => {
     try {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export default function Login() {
   const { signIn, signUp, user, isLoading: isAuthLoading } = auth; // Get isAuthLoading from useAuth
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation(); // Use useLocation
   const isMobile = useIsMobile();
 
   // Shared state
@@ -40,21 +41,27 @@ export default function Login() {
   const appUrl = window.location.origin;
 
   useEffect(() => {
-    // Trigger redirection logic when auth is loaded, user is present, and we haven't started the process
-    if (!isAuthLoading && user && !isProfileLoading && !hasRedirected.current) {
+    // Prevent re-running if redirection has already been attempted
+    if (hasRedirected.current) {
+      console.log("Redirection already attempted, skipping effect.");
+      return;
+    }
+
+    // Trigger redirection logic when auth is loaded and user is present
+    if (!isAuthLoading && user && !isProfileLoading) {
       console.log("Auth loading complete and user is authenticated. Initiating profile check and redirection for user:", user.uid);
-      // Set hasRedirected.current to true here to prevent immediate re-triggering of handleUserRedirection by state updates within it
-      hasRedirected.current = true;
       handleUserRedirection(user.uid);
     } else if (!isAuthLoading && !user) {
       // If auth loading complete and no user, ensure profile loading is false and reset redirected ref
       setIsProfileLoading(false); // Ensure loader is off if no user logs in
       hasRedirected.current = false; // Reset ref if user logs out
+       console.log("Auth loading complete and no user. Resetting redirection state.");
     }
     // Dependencies: React to changes in user and auth loading state.
     // navigate is a dependency because handleUserRedirection uses it.
     // isProfileLoading is NOT a dependency here; it's managed by the effect/handler.
-  }, [user, isAuthLoading, navigate]);
+    // location.pathname is added to dependencies to re-evaluate if the path changes externally (though unlikely in this specific flow)
+  }, [user, isAuthLoading, navigate, location.pathname]);
 
   const handleUserRedirection = async (userId: string) => {
     setIsProfileLoading(true); // Start loader
@@ -68,6 +75,7 @@ export default function Login() {
         setError("Profile not found. Please contact support or try signing up again.");
         await auth.signOut();
         hasRedirected.current = false; // Reset ref on error or missing profile
+        console.log("Profile not found or error. Resetting redirection state.");
       } else {
         const profileData = serialize(profileSnap.data());
         console.log("Profile status:", profileData);
@@ -75,18 +83,29 @@ export default function Login() {
         if (profileData && profileData.approved) {
           const userRole = profileData.role as UserRole;
           const redirectPath = redirectBasedOnRole(userRole);
-          console.log(`User approved, redirecting to ${redirectPath} based on role ${userRole}`);
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
-          });
-          // hasRedirected.current is already set to true in useEffect
-          navigate(redirectPath, { replace: true }); // Use replace: true
+          console.log(`User approved, checking if already on ${redirectPath} based on role ${userRole}`);
+
+          // Only navigate if not already on the target path
+          if (location.pathname !== redirectPath) {
+            console.log(`Redirecting to ${redirectPath}`);
+             // Set hasRedirected.current to true before navigating
+            hasRedirected.current = true;
+            toast({
+              title: "Login successful",
+              description: "Welcome back!",
+            });
+            navigate(redirectPath, { replace: true }); // Use replace: true
+          } else {
+            console.log(`Already on the correct path: ${redirectPath}`);
+             // If already on the correct path, still mark as attempted redirect
+            hasRedirected.current = true;
+          }
         } else {
           console.log("User was not approved, logging out");
           setError("Your account is not approved. Please contact support.");
           await auth.signOut();
           hasRedirected.current = false; // Reset ref on logout
+          console.log("User not approved. Logging out and resetting redirection state.");
         }
       }
     } catch (err) {
@@ -94,8 +113,10 @@ export default function Login() {
       setError("An error occurred during login. Please try again.");
       await auth.signOut();
       hasRedirected.current = false; // Reset ref on error
+      console.log("Error during redirection. Logging out and resetting redirection state.");
     } finally {
       setIsProfileLoading(false); // Always stop loader
+       console.log("User redirection process finished.");
     }
   };
 
@@ -175,7 +196,7 @@ export default function Login() {
               <CardDescription className="text-gray-300">Login or create an account to get started</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}> {/* Corrected typo here */}
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#334155]">
                   <TabsTrigger value="login" className="data-[state=active]:bg-blue-600">Login</TabsTrigger>
                   <TabsTrigger value="signup" className="data-[state=active]:bg-blue-600">Sign Up</TabsTrigger>

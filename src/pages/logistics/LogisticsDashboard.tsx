@@ -1,4 +1,5 @@
 
+import React, { useEffect } from 'react';
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,9 +7,20 @@ import { FuelRequestsOverview } from '@/components/logistics/FuelRequestsOvervie
 import ApprovedRequestsReport from '@/components/logistics/ApprovedRequestsReport';
 import { Fuel, Truck, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useRequestWorkflow } from '@/contexts/RequestWorkflowContext'; // Import the context hook
+import { useAuth } from '@/contexts/AuthContext'; // Import AuthContext
 
 const LogisticsDashboard = () => {
   const navigate = useNavigate();
+  const { refreshRequests } = useRequestWorkflow(); // Use the context hook
+  const { user } = useAuth(); // Use AuthContext
+
+  // Fetch requests when the component mounts and user is available
+  useEffect(() => {
+    if (user) {
+      refreshRequests();
+    }
+  }, [user, refreshRequests]); // Add user and refreshRequests as dependencies
   
   const quickStats = [
     {

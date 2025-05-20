@@ -1,11 +1,23 @@
 
 import RoleDashboardLayout from '@/components/RoleDashboardLayout';
 import PendingFinanceApprovals from '@/components/finance/PendingFinanceApprovals';
-import { FinanceSidebar } from '@/components/finance/FinanceSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, TrendingUp, FileText } from 'lucide-react';
+import { useRequestWorkflow } from '@/contexts/RequestWorkflowContext'; // Import the context hook
+import { useAuth } from '@/contexts/AuthContext'; // Import AuthContext
+import { FinanceSidebar } from '@/components/finance/FinanceSidebar';
 
 const FinanceDashboard = () => {
+  const { refreshRequests } = useRequestWorkflow(); // Use the context hook
+  const { user } = useAuth(); // Use AuthContext
+
+  // Fetch requests when the component mounts and user is available
+  useEffect(() => {
+    if (user) {
+      refreshRequests();
+    }
+  }, [user, refreshRequests]); // Add user and refreshRequests as dependencies
+
   const summaryItems = [
     {
       title: "Budget Allocation",
