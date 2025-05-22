@@ -35,32 +35,36 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState("login");
   const [isProfileLoading, setIsProfileLoading] = useState(false); // Initialize as false
 
-  const hasRedirected = useRef(false); // Use a ref to track if navigation has been *attempted*
+  // Use a ref to track if redirection has been attempted
+  const hasRedirected = useRef(false);
 
   // Current app URL for QR code
   const appUrl = window.location.origin;
 
   useEffect(() => {
-    // Prevent re-running if redirection has already been attempted
-    if (hasRedirected.current) {
-      console.log("Redirection already attempted, skipping effect.");
-      return;
+    console.log("Login useEffect triggered.");
+    // If auth is loading, or user is present but profile is loading, do nothing
+    // Also, if we have already attempted redirection for the current user, do nothing
+    if (isAuthLoading || (user && isProfileLoading) || (user && hasRedirected.current)) {
+        console.log("Auth loading, profile loading, or already attempted redirection. Skipping effect body.");
+        return;
     }
 
-    // Trigger redirection logic when auth is loaded and user is present
+    // Trigger redirection logic when auth is loaded and user is present, and redirection hasn't been attempted
     if (!isAuthLoading && user && !isProfileLoading) {
       console.log("Auth loading complete and user is authenticated. Initiating profile check and redirection for user:", user.uid);
       handleUserRedirection(user.uid);
     } else if (!isAuthLoading && !user) {
       // If auth loading complete and no user, ensure profile loading is false and reset redirected ref
       setIsProfileLoading(false); // Ensure loader is off if no user logs in
-      hasRedirected.current = false; // Reset ref if user logs out
+      hasRedirected.current = false; // Reset ref if user logs out or is not authenticated initially
        console.log("Auth loading complete and no user. Resetting redirection state.");
     }
     // Dependencies: React to changes in user and auth loading state.
     // navigate is a dependency because handleUserRedirection uses it.
-    // isProfileLoading is NOT a dependency here; it's managed by the effect/handler.
     // location.pathname is added to dependencies to re-evaluate if the path changes externally (though unlikely in this specific flow)
+    // isProfileLoading is NOT a dependency here; it's managed by the effect/handler.
+    // hasRedirected.current is read inside the effect, but not a dependency to avoid infinite loop issues
   }, [user, isAuthLoading, navigate, location.pathname]);
 
   const handleUserRedirection = async (userId: string) => {
@@ -80,6 +84,9 @@ export default function Login() {
         const profileData = serialize(profileSnap.data());
         console.log("Profile status:", profileData);
 
+        // Set hasRedirected.current to true here, after confirming profile exists and is processed
+        hasRedirected.current = true; // Set true once profile is successfully loaded
+
         if (profileData && profileData.approved) {
           const userRole = profileData.role as UserRole;
           const redirectPath = redirectBasedOnRole(userRole);
@@ -88,8 +95,6 @@ export default function Login() {
           // Only navigate if not already on the target path
           if (location.pathname !== redirectPath) {
             console.log(`Redirecting to ${redirectPath}`);
-             // Set hasRedirected.current to true before navigating
-            hasRedirected.current = true;
             toast({
               title: "Login successful",
               description: "Welcome back!",
@@ -97,8 +102,7 @@ export default function Login() {
             navigate(redirectPath, { replace: true }); // Use replace: true
           } else {
             console.log(`Already on the correct path: ${redirectPath}`);
-             // If already on the correct path, still mark as attempted redirect
-            hasRedirected.current = true;
+            // If already on the correct path, no need to navigate, ref is already true
           }
         } else {
           console.log("User was not approved, logging out");

@@ -1,7 +1,7 @@
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+import React from 'react'; // Keep this import as it's used for React.ReactNode and React.FC
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -28,6 +28,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   // Check role-based access
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to the appropriate dashboard based on their role
+    // Temporarily redirecting management to /1 for debugging
     switch (user.role) {
       case 'technician':
         return <Navigate to="/technician/dashboard" replace />;
@@ -48,7 +49,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
       case 'finance':
         return <Navigate to="/finance/dashboard" replace />;
       case 'management':
-        return <Navigate to="/management" replace />;
+        return <Navigate to="/1" replace />;
       case 'ehs':
         return <Navigate to="/ehs/dashboard" replace />;
       case 'procurement':
