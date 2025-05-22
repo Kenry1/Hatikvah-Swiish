@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Function to check if the user is the owner of the document
+    // Assumes the document has a 'userId' field matching the authenticated user's uid
+    // Note: For profiles, the document ID is the user's UID, so we check profileId == request.auth.uid directly.
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Function to check if the user is an admin
+    // Assumes a 'profiles' collection exists where the document ID is the user's UID
+    // and it has a 'role' field.
+    function isAdmin() {
+       return isAuthenticated() && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Rules for the 'profiles' collection
+    match /profiles/{profileId} {
+      // Allow authenticated users to create their own profile document
+      // The profileId must match the authenticated user's UID
+      allow create: if isAuthenticated() && profileId == request.auth.uid;
+
+      // Allow authenticated users to get their own profile (ID must match UID)
+      allow get: if isAuthenticated() && profileId == request.auth.uid;
+
+      // Allow authenticated users to list profiles if the resource data's 'id' field matches their UID, or if they are admin
+      // This supports queries like where('id', '==', user.uid)
+      allow list: if (isAuthenticated() && resource.data.id == request.auth.uid) || isAdmin();
+
+
+      // Allow users to update their own profile (ID must match UID), but prevent changing the role or ID field
+      allow update: if isAuthenticated() && profileId == request.auth.uid
+                     && request.resource.data.id == resource.data.id // Prevent changing ID field
+                     && request.resource.data.role == resource.data.role; // Prevent changing role
+
+
+      // Admins can read and update any profile (use with caution)
+      allow get, list, update: if isAdmin();
+
+      // No delete rule defined for profiles here (consider if users can delete accounts)
+    }
+
+    // Rules for the 'duty_logs' collection
+    match /duty_logs/{logId} {
+      // Allow authenticated users to create new duty logs
+      // Ensure the userId in the log matches the authenticated user's uid
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Allow users to read their own duty logs
+      allow read: if isOwner(resource.data.userId);
+
+      // Allow admins to read all duty logs
+      allow list: if isAdmin();
+
+      // Prevent users from updating or deleting existing duty logs (they are historical records)
+      allow update, delete: if false;
+    }
+
+    // Rules for the 'leave_requests' collection
+    match /leave_requests/{requestId} {
+      // Allow authenticated users to create leave requests
+      // Ensure the userId in the request matches the authenticated user's uid
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Allow users to read their own leave requests
+      allow read: if isOwner(resource.data.userId);
+
+      // Allow users to update their own leave requests ONLY if the status is 'Pending'
+      allow update: if isOwner(resource.data.userId) && resource.data.status == 'Pending';
+
+      // Allow admins to read all leave requests and update their status
+      allow get, list, update: if isAdmin();
+
+      // Allow admins to delete leave requests
+      allow delete: if isAdmin();
+    }
+
+    // Rules for the 'field_surveys' collection
+    match /field_surveys/{surveyId} {
+      // Allow everyone to read field surveys (change to isAuthenticated() if only logged in users should see them)
+      allow read: if true;
+
+      // Allow authenticated users to create new survey suggestions
+      // Ensure the created_by field matches the authenticated user's uid (assuming you add this field)
+      allow create: if isAuthenticated(); // Consider adding && request.resource.data.created_by == request.auth.uid;
+
+      // Allow admins to update and delete surveys
+      allow update, delete: if isAdmin();
+    }
+
+    // Rules for the 'field_survey_signups' collection
+    match /field_survey_signups/{signupId} {
+      // Allow authenticated users to create signups
+      // Ensure the userId in the signup matches the authenticated user's uid
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Allow authenticated users to delete their own signups
+      allow delete: if isOwner(resource.data.userId);
+
+      // Allow users to read their own signups
+      allow read: if isOwner(resource.data.userId);
+
+       // Allow admins to read all signups
+      allow list: if isAdmin();
+    }
+
+    // Rules for the 'user_onboarding_progress' collection
+    // Allows authenticated users to read, list, create, and update their own progress documents
+    match /user_onboarding_progress/{progressId} {
+      allow read, list, create, update: if isAuthenticated() && request.auth.uid == resource.data.user_id;
+      // Optional: Allow admins to list or read all progress if needed for reporting/management
+      // allow list, read: if isAdmin();
+    }
+  }
+}

@@ -21,7 +21,7 @@ export const redirectBasedOnRole = (role: UserRole): string => {
     case 'finance':
       return '/finance/dashboard';
     case 'management':
-      return '/management/dashboard';
+      return '/management'; // Modified line
     case 'ehs':
       return '/ehs/dashboard';
     case 'procurement':

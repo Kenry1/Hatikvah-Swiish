@@ -48,7 +48,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
       case 'finance':
         return <Navigate to="/finance/dashboard" replace />;
       case 'management':
-        return <Navigate to="/management/dashboard" replace />;
+        return <Navigate to="/management" replace />;
       case 'ehs':
         return <Navigate to="/ehs/dashboard" replace />;
       case 'procurement':

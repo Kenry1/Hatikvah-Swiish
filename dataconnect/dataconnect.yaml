@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "hatikvah-swiish"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "hatikvah-swiish-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

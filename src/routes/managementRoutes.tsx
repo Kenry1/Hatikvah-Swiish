@@ -1,7 +1,7 @@
 
 import { RouteObject } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import ManagementDashboard from '@/pages/management/ManagementDashboard';
+import ManagementDashboard from '@/pages/management/dashboard';
 import UserApprovalDashboard from '@/pages/management/UserApprovalDashboard';
 
 export const managementRoutes: RouteObject[] = [

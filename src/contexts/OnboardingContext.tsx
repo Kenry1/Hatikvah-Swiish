@@ -60,8 +60,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         onboarding_completed: data?.onboarding_completed || false,
         onboarding_step: data?.onboarding_step || 0,
         avatar_url: data?.avatar_url || null,
-        created_at: data?.created_at?.toDate()?.toISOString() || new Date().toISOString(), // Convert Firestore Timestamp to string
-        updated_at: data?.updated_at?.toDate()?.toISOString() || new Date().toISOString(), // Convert Firestore Timestamp to string
+        // Handle date fields more robustly
+        created_at: data?.created_at instanceof Date && !isNaN(data.created_at.getTime()) ? data.created_at.toISOString() : (data?.created_at ? (new Date(data.created_at) && !isNaN(new Date(data.created_at).getTime()) ? new Date(data.created_at).toISOString() : new Date().toISOString()) : new Date().toISOString()),
+        updated_at: data?.updated_at instanceof Date && !isNaN(data.updated_at.getTime()) ? data.updated_at.toISOString() : (data?.updated_at ? (new Date(data.updated_at) && !isNaN(new Date(data.updated_at).getTime()) ? new Date(data.updated_at).toISOString() : new Date().toISOString()) : new Date().toISOString()),
         name: (data?.first_name && data?.last_name) ? `${data.first_name} ${data.last_name}` : null,
       };
 
