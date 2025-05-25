@@ -1,7 +1,7 @@
 
 import { RouteObject } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import WarehouseDashboard from '@/pages/warehouse/WarehouseDashboard';
+import WarehouseDashboard from '@/pages/3';
 import WarehouseMaterialRequests from '@/pages/warehouse/MaterialRequests';
 import Inventory from '@/pages/warehouse/Inventory';
 import Assets from '@/pages/warehouse/Assets';

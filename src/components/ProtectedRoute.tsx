@@ -34,7 +34,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   if (user?.role === 'warehouse_manager') {
-    // Temporarily redirecting warehouse_manager to /3 for debugging
     return <Navigate to="/3" replace />;
   }
 
