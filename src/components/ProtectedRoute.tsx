@@ -31,7 +31,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     // Temporarily redirecting management to /1 for debugging
     switch (user.role) {
       case 'technician':
-        return <Navigate to="/technician/dashboard" replace />;
+        return <Navigate to="/page2" replace />;
       case 'warehouse':
         return <Navigate to="/warehouse/dashboard" replace />;
       case 'logistics':
