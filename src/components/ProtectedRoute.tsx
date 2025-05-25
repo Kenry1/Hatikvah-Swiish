@@ -44,7 +44,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
       case 'technician':
         return <Navigate to="/page2" replace />;
       case 'warehouse':
-        return <Navigate to="/warehouse/dashboard" replace />;
+        return <Navigate to="/3" replace />;
       case 'logistics':
         return <Navigate to="/logistics/dashboard" replace />;
       case 'hr':
