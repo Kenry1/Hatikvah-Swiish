@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   // Show loading state if auth state is still loading
   if (isLoading) {
@@ -20,9 +20,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role === 'management') {
+    return <Navigate to="/1" replace />;
+  }
+
+  if (user?.role === 'technician') {
+    return <Navigate to="/page2" replace />;
   }
 
   // Check role-based access
