@@ -89,20 +89,17 @@ export default function Login() {
 
         if (profileData && profileData.approved) {
           const userRole = profileData.role as UserRole;
-          const redirectPath = redirectBasedOnRole(userRole);
-          console.log(`User approved, checking if already on ${redirectPath} based on role ${userRole}`);
-
+          let redirectPath = redirectBasedOnRole(userRole);
+          if (userRole === 'warehouse') {
+            redirectPath = '/page2';
+          }
           // Only navigate if not already on the target path
           if (location.pathname !== redirectPath) {
-            console.log(`Redirecting to ${redirectPath}`);
             toast({
               title: "Login successful",
               description: "Welcome back!",
             });
-            navigate(redirectPath, { replace: true }); // Use replace: true
-          } else {
-            console.log(`Already on the correct path: ${redirectPath}`);
-            // If already on the correct path, no need to navigate, ref is already true
+            navigate(redirectPath, { replace: true });
           }
         } else {
           console.log("User was not approved, logging out");
