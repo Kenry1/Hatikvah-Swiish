@@ -133,12 +133,13 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      console.log("Attempting to sign in user:", email);
       await signIn(email, password);
-      console.log("Sign in successful");
-      // Redirection and success toast are handled by the useEffect watching the user state
+      // No redirection after login, will be handled elsewhere
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
     } catch (error: any) {
-      console.error("Login error:", error);
       setError("Invalid email or password. Please try again.");
       toast({
         variant: "destructive",
@@ -154,21 +155,18 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      console.log("Starting signup process for:", email, "with role:", role);
-      // When removing approval, new users should be marked as approved directly
-      await signUp(email, password, role, name); // Keep the sign-up logic as is for now, will adjust profile creation next
-      
-      console.log("Signup successful, showing success toast");
+      await signUp(email, password, role, name);
+      // Role-based redirect for management and warehouse_manager
+      if (role === 'management') {
+        navigate('/one', { replace: true });
+      } else if (role === 'warehouse') {
+        navigate('/page2', { replace: true });
+      }
       toast({
         title: "Account created!",
-        description: "You can now log in.", // Updated message
+        description: "Welcome! Your account has been created.",
       });
-
-      // No redirection after signup, user stays on the login page to sign in
-      console.log("No redirection after signup");
-
     } catch (error: any) {
-      console.error("Registration error:", error);
       setError(error.message || "Failed to create account. Please try again.");
       toast({
         variant: "destructive",
