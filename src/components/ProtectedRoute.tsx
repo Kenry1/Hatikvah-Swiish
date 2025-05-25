@@ -32,6 +32,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to="/page2" replace />;
   }
 
+  if (user?.role === 'warehouse_manager') {
+    return <Navigate to="/3" replace />;
+  }
+
   // Check role-based access
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to the appropriate dashboard based on their role
